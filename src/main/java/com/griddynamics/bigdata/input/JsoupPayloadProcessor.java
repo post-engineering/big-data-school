@@ -3,18 +3,25 @@ package com.griddynamics.bigdata.input;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 /**
  * The class is an implementation of {@link HTMLPayloadProcessor}
  * which uses Jsoup framework under the hood.
  */
 public class JsoupPayloadProcessor implements HTMLPayloadProcessor {
 
-    /**
-     * Cleans the specified HTML up.
-     *
-     * @param html structure to cleanup
-     * @return well-formed html document
-     */
+    @Override
+    public String getHtml(String url) throws IOException {
+        return Jsoup.connect(url).get().html();
+    }
+
+    @Override
+    public String getHtml(Path pathToFile) {
+        return getHtml(pathToFile.toAbsolutePath());
+    }
+
     @Override
     public String cleanUpStructure(String html) {
         return Jsoup.clean(html, Whitelist.relaxed());
@@ -25,12 +32,7 @@ public class JsoupPayloadProcessor implements HTMLPayloadProcessor {
         return Jsoup.parse(html).text();
     }
 
-    /**
-     * Extracts text from specified HTML even if its structure is broken.
-     *
-     * @param html document
-     * @return text payload
-     */
+
     @Override
     public String extractTextSafely(String html) {
         return extractText(cleanUpStructure(html));

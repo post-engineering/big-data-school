@@ -1,9 +1,31 @@
 package com.griddynamics.bigdata.input;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 /**
  * The interface declares custom HTML processing functionality
  */
 public interface HTMLPayloadProcessor {
+
+    /**
+     * Gets HTML document from the specified url
+     *
+     * @param url ex. : www.google.com
+     * @return HTML doument as a String
+     * @throws IOException
+     */
+    String getHtml(String url) throws IOException;
+
+
+    /**
+     * Gets HTML document from the specified file
+     *
+     * @param pathToFile
+     * @return HTML doument as a String
+     * @throws IOException
+     */
+    String getHtml(Path pathToFile);
 
     /**
      * Cleans the specified HTML up.
