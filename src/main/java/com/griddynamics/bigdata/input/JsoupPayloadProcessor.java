@@ -19,7 +19,7 @@ public class JsoupPayloadProcessor implements HTMLPayloadProcessor {
 
     @Override
     public String getHtml(Path pathToFile) {
-        return getHtml(pathToFile.toAbsolutePath());
+        return getHtml(pathToFile.toAbsolutePath().getFileName());
     }
 
     @Override
