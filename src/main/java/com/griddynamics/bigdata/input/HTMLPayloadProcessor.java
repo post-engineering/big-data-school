@@ -1,32 +1,33 @@
 package com.griddynamics.bigdata.input;
 
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Whitelist;
-
 /**
- * The utility class for HTML processing
+ * The interface declares custom HTML processing functionality
  */
-public class HTMLPayloadProcessor {
-
-    private HTMLPayloadProcessor(){
-    }
+public interface HTMLPayloadProcessor {
 
     /**
      * Cleans the specified HTML up.
+     *
      * @param html structure to cleanup
      * @return well-formed html document
      */
-    public static String cleanUpStructure(String html){
-        return Jsoup.clean(html, Whitelist.relaxed());
-    }
+    String cleanUpStructure(String html);
+
 
     /**
-     * Extracts text from specified HTML even if its structure is broken.
+     * Extracts text from specified HTML.
+     *
      * @param html document
      * @return text payload
      */
-    public static String extractTextSafely(String html){
-        return  Jsoup.parse(cleanUpStructure(html)).text();
-    }
+    String extractText(String html);
+
+    /**
+     * Extracts text from specified HTML even if its structure is broken.
+     *
+     * @param html document
+     * @return text payload
+     */
+    String extractTextSafely(String html);
 
 }
