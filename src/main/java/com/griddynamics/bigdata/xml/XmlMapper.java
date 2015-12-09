@@ -39,7 +39,7 @@ public abstract class XmlMapper extends Mapper<LongWritable, Text, Text, IntWrit
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        InputStream stream = new ByteArrayInputStream(value.getBytes());
+        InputStream stream = new ByteArrayInputStream(value.getBytes(), 0, value.getLength());
         try {
             DocumentBuilder builder = builderFactory.newDocumentBuilder();
             Document document = builder.parse(stream);
