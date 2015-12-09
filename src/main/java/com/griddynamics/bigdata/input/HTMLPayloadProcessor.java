@@ -25,7 +25,7 @@ public interface HTMLPayloadProcessor {
      * @return HTML doument as a String
      * @throws IOException
      */
-    String getHtml(Path pathToFile);
+    String getHtml(Path pathToFile) throws IOException;
 
     /**
      * Cleans the specified HTML up.
