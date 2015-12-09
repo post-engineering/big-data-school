@@ -1,4 +1,4 @@
-package com.griddynamics.bigdata.pdml;
+package com.griddynamics.bigdata.input.pdml;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;

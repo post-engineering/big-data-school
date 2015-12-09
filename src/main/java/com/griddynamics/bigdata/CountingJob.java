@@ -1,7 +1,7 @@
 package com.griddynamics.bigdata;
 
 
-import com.griddynamics.bigdata.pdml.PDMLInputFormat;
+import com.griddynamics.bigdata.input.pdml.PDMLInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;

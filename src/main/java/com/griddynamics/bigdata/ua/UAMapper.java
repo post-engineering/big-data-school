@@ -1,6 +1,6 @@
 package com.griddynamics.bigdata.ua;
 
-import com.griddynamics.bigdata.xml.XmlMapper;
+import com.griddynamics.bigdata.xml.XMLMapper;
 import net.sf.uadetector.UserAgentStringParser;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 import org.w3c.dom.Document;
@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * Created by msigida on 11/24/15.
  */
-public class UAMapper extends XmlMapper {
+public class UAMapper extends XMLMapper {
 
     private UserAgentStringParser parser;
 

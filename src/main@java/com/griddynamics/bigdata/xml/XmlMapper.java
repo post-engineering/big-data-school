@@ -22,38 +22,32 @@ import java.io.InputStream;
 /**
  * Created by msigida on 11/24/15.
  */
-public abstract class XMLMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+public abstract class XmlMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 
-    private final static Logger LOG = LoggerFactory.getLogger(XMLMapper.class);
+    private final static Logger LOG = LoggerFactory.getLogger(XmlMapper.class);
 
     protected final static IntWritable ONE = new IntWritable(1);
 
+    protected DocumentBuilderFactory builderFactory;
     protected XPath xPath;
-    protected DocumentBuilder builder;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
+        builderFactory = DocumentBuilderFactory.newInstance();
         xPath = XPathFactory.newInstance().newXPath();
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-        try {
-            builder = builderFactory.newDocumentBuilder();
-        } catch (ParserConfigurationException e) {
-            LOG.error("Error creating document builder", e);
-            throw new IOException(e);
-        }
     }
 
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
         InputStream stream = new ByteArrayInputStream(value.getBytes(), 0, value.getLength());
         try {
+            DocumentBuilder builder = builderFactory.newDocumentBuilder();
             Document document = builder.parse(stream);
             mapXml(document, context);
-        } catch (SAXException | XPathExpressionException e) {
+        } catch (ParserConfigurationException | SAXException | XPathExpressionException e) {
             LOG.error("Error parsing provided XML", e);
-            throw new IOException(e);
         }
     }
 
-    protected abstract void mapXml(Document document, Context context) throws IOException, InterruptedException, XPathExpressionException;
+    protected abstract void mapXml(Document document, Context context) throws XPathExpressionException;
 }

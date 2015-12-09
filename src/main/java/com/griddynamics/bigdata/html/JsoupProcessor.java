@@ -1,4 +1,4 @@
-package com.griddynamics.bigdata.input;
+package com.griddynamics.bigdata.html;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
@@ -7,10 +7,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * The class is an implementation of {@link HTMLPayloadProcessor}
+ * The class is an implementation of {@link HTMLProcessor}
  * which uses Jsoup framework under the hood.
  */
-public class JsoupPayloadProcessor implements HTMLPayloadProcessor {
+public class JsoupProcessor implements HTMLProcessor {
 
     @Override
     public String getHtml(String url) throws IOException {

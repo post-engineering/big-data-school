@@ -39,7 +39,7 @@
         <profile>
             <id>html-counter</id>
             <properties>
-                <manifest.main>com.griddynamics.bigdata.html.HtmlCounter</manifest.main>
+                <manifest.main>com.griddynamics.bigdata.html.HTMLCounter</manifest.main>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
