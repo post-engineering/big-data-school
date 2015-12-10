@@ -1,10 +1,11 @@
 package com.griddynamics.bigdata.input.pdml;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.*;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -18,6 +19,7 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 
 /**
@@ -26,11 +28,7 @@ import java.io.StringWriter;
 public class PDMLRecordReader extends RecordReader<LongWritable, Text> {
 
     private static final Logger LOG = LoggerFactory.getLogger(PDMLRecordReader.class);
-    private static final Integer BUFF_SIZE = 1024 * 32;
-
-    private FSDataInputStream file;
-    private Long start;
-    private Long end;
+    private static final Integer BUFFER_SIZE = 1024 * 1024 * 32; // 32 MB
 
     private XMLEventReader reader;
 
@@ -41,19 +39,28 @@ public class PDMLRecordReader extends RecordReader<LongWritable, Text> {
     public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
         FileSplit split = (FileSplit) inputSplit;
         Path path = split.getPath();
-        FileSystem fs = path.getFileSystem(context.getConfiguration());
-        file = fs.open(path);
-        start = split.getStart();
-        end = start + split.getLength();
-
-        BufferedInputStream buffered = new BufferedInputStream(file, BUFF_SIZE);
-        XMLInputFactory factory = XMLInputFactory.newInstance();
+        Configuration conf = context.getConfiguration();
+        InputStream stream = getInputStream(path, conf);
         try {
-            reader = factory.createXMLEventReader(buffered);
+            reader = XMLInputFactory.newInstance().createXMLEventReader(stream);
         } catch (XMLStreamException e) {
             LOG.error("Error creating XML reader", e);
             throw new IOException(e);
         }
+    }
+
+    private InputStream getInputStream(Path path, Configuration conf) throws IOException {
+        FSDataInputStream stream = path.getFileSystem(conf).open(path);
+        BufferedInputStream buffered;
+        CompressionCodec codec = new CompressionCodecFactory(conf).getCodec(path);
+        if (codec != null) {
+            Decompressor decompressor = CodecPool.getDecompressor(codec);
+            CompressionInputStream compressed = codec.createInputStream(stream, decompressor);
+            buffered = new BufferedInputStream(compressed, BUFFER_SIZE);
+        } else {
+            buffered = new BufferedInputStream(stream, BUFFER_SIZE);
+        }
+        return buffered;
     }
 
     @Override
@@ -84,12 +91,16 @@ public class PDMLRecordReader extends RecordReader<LongWritable, Text> {
 
     @Override
     public void close() throws IOException {
-        file.close();
+        try {
+            reader.close();
+        } catch (XMLStreamException e) {
+            throw new IOException("Error closing data stream", e);
+        }
     }
 
     private String nextRecord() throws IOException {
         try {
-            StringWriter output = new StringWriter(BUFF_SIZE);
+            StringWriter output = new StringWriter();
             XMLEventWriter writer = null;
             while (reader.hasNext()) {
                 XMLEvent e = reader.nextEvent();
