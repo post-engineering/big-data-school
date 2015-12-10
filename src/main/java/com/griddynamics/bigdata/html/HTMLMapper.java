@@ -18,7 +18,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * Created by msigida on 11/24/15.
+ * TODO
  */
 public class HTMLMapper extends XMLMapper<LongWritable, Text, IntWritable> {
 

@@ -18,9 +18,9 @@ import java.util.regex.Pattern;
 public class JsoupPayloadProcessorTest {
 
     private final HTMLProcessor htmlProcessor = new JsoupProcessor();
-     /*
-      has no closing <p> tag
-      */
+    /*
+     has no closing <p> tag
+     */
     private final String DIRTY_HTML_1 = "<p>First Part<ul><li>list item 1</li><li>list item 2</li></ul> second part";
 
     private final String PORNOHUB_URL = "http://www.pornhub.com/categories";
@@ -28,7 +28,7 @@ public class JsoupPayloadProcessorTest {
 
 
     @Test
-    public void testExtractTextFromDirtyHTML(){
+    public void testExtractTextFromDirtyHTML() {
         String actual = htmlProcessor.extractTextSafely(DIRTY_HTML_1);
         String expected = "First Part list item 1 list item 2 second part";
         Assert.assertEquals(actual, expected);
@@ -37,7 +37,6 @@ public class JsoupPayloadProcessorTest {
 
     @Test
     public void testExtractTextFromBigHTML() throws IOException {
-
         String bidHtml = htmlProcessor.getHtml(PORNOHUB_URL);
         Matcher matcher = HTML_TAG_PATTERN.matcher(bidHtml);
         Assert.assertTrue(matcher.find());
@@ -46,4 +45,6 @@ public class JsoupPayloadProcessorTest {
         matcher = HTML_TAG_PATTERN.matcher(actual);
         Assert.assertFalse(matcher.find());
     }
+
+
 }

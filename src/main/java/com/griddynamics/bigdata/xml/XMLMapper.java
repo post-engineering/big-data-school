@@ -1,6 +1,5 @@
 package com.griddynamics.bigdata.xml;
 
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.w3c.dom.Document;
@@ -17,7 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Created by msigida on 11/24/15.
+ * TODO
  */
 public abstract class XMLMapper<KEYIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN, Text, KEYOUT, VALUEOUT> {
 
