@@ -1,11 +1,8 @@
 package com.griddynamics.bigdata.xml;
 
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -22,38 +19,31 @@ import java.io.InputStream;
 /**
  * Created by msigida on 11/24/15.
  */
-public abstract class XMLMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
-
-    private final static Logger LOG = LoggerFactory.getLogger(XMLMapper.class);
-
-    protected final static IntWritable ONE = new IntWritable(1);
+public abstract class XMLMapper<KEYIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN, Text, KEYOUT, VALUEOUT> {
 
     protected XPath xPath;
     protected DocumentBuilder builder;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        xPath = XPathFactory.newInstance().newXPath();
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         try {
-            builder = builderFactory.newDocumentBuilder();
+            xPath = XPathFactory.newInstance().newXPath();
+            builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            LOG.error("Error creating document builder", e);
-            throw new IOException(e);
+            throw new IOException("Error creating XML document builder", e);
         }
     }
 
     @Override
-    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+    protected void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
         InputStream stream = new ByteArrayInputStream(value.getBytes(), 0, value.getLength());
         try {
             Document document = builder.parse(stream);
-            mapXml(document, context);
+            mapXml(document, key, context);
         } catch (SAXException | XPathExpressionException e) {
-            LOG.error("Error parsing provided XML", e);
-            throw new IOException(e);
+            throw new IOException("Error parsing provided XML", e);
         }
     }
 
-    protected abstract void mapXml(Document document, Context context) throws IOException, InterruptedException, XPathExpressionException;
+    protected abstract void mapXml(Document document, KEYIN key, Context context) throws IOException, InterruptedException, XPathExpressionException;
 }
