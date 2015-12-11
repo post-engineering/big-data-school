@@ -44,15 +44,20 @@ public class HTMLMapper extends XMLMapper<LongWritable, Text, IntWritable> {
     @Override
     protected void mapXml(Document document, LongWritable key, Context context) throws IOException, InterruptedException, XPathExpressionException {
         String html = extractHtml(document);
-        for (String word : extractWords(html)) {
-            if (word.length() >= MIN_WORD_LENGTH) {
-                context.write(new Text(word), ONE);
+        if (html != null) {
+            for (String word : extractWords(html)) {
+                if (word.length() >= MIN_WORD_LENGTH) {
+                    context.write(new Text(word), ONE);
+                }
             }
         }
     }
 
     private String extractHtml(Document document) throws XPathExpressionException {
         NodeList values = (NodeList) expression.evaluate(document, XPathConstants.NODESET);
+        if (values.getLength() == 0) {
+            return null;
+        }
         StringBuilder hexHtmlBuilder = new StringBuilder();
         for (int i = 0; i < values.getLength(); ++i) {
             hexHtmlBuilder.append(values.item(i).getNodeValue());

@@ -103,11 +103,6 @@
             <artifactId>uadetector-resources</artifactId>
             <version>2014.10</version>
         </dependency>
-        <dependency>
-            <groupId>com.wu-man</groupId>
-            <artifactId>jreadability</artifactId>
-            <version>1.3</version>
-        </dependency>
 
         <!-- HTML processing -->
         <dependency>
