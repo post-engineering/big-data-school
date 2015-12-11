@@ -1,7 +1,8 @@
 package com.griddynamics.bigdata;
 
 
-import com.griddynamics.bigdata.framework.ExtendedOptionsParser;
+import com.griddynamics.bigdata.util.ExtendedOptionsParser;
+import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -23,7 +24,7 @@ public abstract class CustomizableJob extends Configured implements Tool {
 
     public static final String ROOT_PACKAGE = "com.griddynamics.bigdata";
     private final static Logger LOG = LoggerFactory.getLogger(CustomizableJob.class);
-    //private final static String JAR_PATH = "target/bigdata-1.0-SNAPSHOT.jar";
+
     private ExtendedOptionsParser optionsParser;
 
     public static CustomizableJob parseJob(String[] args) throws Exception {
@@ -31,29 +32,19 @@ public abstract class CustomizableJob extends Configured implements Tool {
         return optionsParser.parseJob();
     }
 
-    public ExtendedOptionsParser getOptionsParser() {
-        return optionsParser;
-    }
-
-    public void setOptionsParser(ExtendedOptionsParser optionsParser) {
-        this.optionsParser = optionsParser;
-    }
-
     @Override
     public final int run(String[] args) throws Exception {
-
-        ExtendedOptionsParser optionsParser = new ExtendedOptionsParser(ROOT_PACKAGE, args);
-
-        if (!optionsParser.areOptionsValid()) {
+        try {
+            optionsParser = new ExtendedOptionsParser(ROOT_PACKAGE, args);
+        } catch (ParseException e) {
             System.err.printf("Please specify valid input parameters");
             optionsParser.printExtendedOptionsUsage(System.err);
             return -1;
         }
+
         LOG.info("Starting...");
 
         Job job = Job.getInstance(getConf(), getMapperClass().getCanonicalName());
-
-        //job.setJar(JAR_PATH);
 
         job.setJarByClass(CustomizableJob.class);
         job.setMapperClass(getMapperClass());
@@ -65,8 +56,9 @@ public abstract class CustomizableJob extends Configured implements Tool {
 
         job.setInputFormatClass(getInputFormatClass());
 
-        FileInputFormat.addInputPath(job, optionsParser.getInputPath());
+        Path inputPath = optionsParser.getInputPath();
         Path outputPath = optionsParser.getOutputPath();
+        FileInputFormat.addInputPath(job, inputPath);
         if (optionsParser.getCleanOutput()) {
             FileSystem.get(getConf()).delete(outputPath, true);
         }

@@ -1,12 +1,12 @@
-package com.griddynamics.bigdata.framework;
+package com.griddynamics.bigdata.util;
 
 import com.griddynamics.bigdata.CustomizableJob;
-import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 import org.apache.commons.cli.*;
 import org.apache.hadoop.fs.Path;
+import org.reflections.Reflections;
 
 import java.io.PrintStream;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -14,13 +14,12 @@ import java.util.stream.Collectors;
  */
 public class ExtendedOptionsParser {
 
-
-    private final static CommandLineParser CMD_PARSER = new DefaultParser();
+    private final static CommandLineParser CMD_PARSER = new GnuParser();
     private String[] args;
     private CommandLine cmd;
     private String rootPackageToScan;
 
-    public ExtendedOptionsParser(String rootPackageToScan, String[] args) throws Exception {
+    public ExtendedOptionsParser(String rootPackageToScan, String[] args) throws ParseException {
         this.args = args;
         cmd = CMD_PARSER.parse(ExtendedOptionKeys.ALL_OPTIONS, this.args);
         this.rootPackageToScan = rootPackageToScan;
@@ -42,38 +41,25 @@ public class ExtendedOptionsParser {
 
         String jobId = cmd.getOptionValue(ExtendedOptionKeys.JOB_ID.getOptionKey());
 
-        FastClasspathScanner uberScanner = new FastClasspathScanner(rootPackageToScan);
-        List<String> customJobClassNames = uberScanner.scan()
-                .getNamesOfClassesWithAnnotation(CustomJob.class)
+        Reflections reflections = new Reflections(rootPackageToScan);
+        Set<Class> annotated = reflections.getTypesAnnotatedWith(CustomJob.class)
                 .stream()
-                .filter(name -> name.endsWith(jobId)).collect(Collectors.toList());
+                .filter(c -> c.getSimpleName().equals(jobId))
+                .collect(Collectors.toSet());
 
-
-        if (customJobClassNames == null) {
+        if (annotated == null)
             return null;
-        }
 
-        String jobClassName = null;
-        if (customJobClassNames.size() > 1) {  //found ambiguous jobs names
-            //TODO analyze annotation
-        } else {
-            jobClassName = customJobClassNames.get(0);
-        }
-
-        if (jobClassName == null) {
-            return null;
-        }
-        Class cls = Class.forName(jobClassName);
+        Class cls = Class.forName(annotated.iterator().next().getName());
         if (CustomizableJob.class.isAssignableFrom(cls)) {
             job = (CustomizableJob) cls.newInstance();
         } else {
             return null;
         }
 
-        if (job != null) job.setOptionsParser(this);
-
         return job;
     }
+
 
     /**
      * TODO
@@ -109,12 +95,6 @@ public class ExtendedOptionsParser {
         return cmd.hasOption(ExtendedOptionKeys.CLEAN_OUTPUT_IF_EXISTS.getOptionKey());
     }
 
-    public boolean areOptionsValid() {
-        return cmd.hasOption(ExtendedOptionKeys.JOB_ID.getOptionKey())
-                && cmd.hasOption(ExtendedOptionKeys.INPUT.getOptionKey())
-                && cmd.hasOption(ExtendedOptionKeys.OUTPUT.getOptionKey());
-    }
-
     /**
      * TODO
      *
@@ -124,16 +104,16 @@ public class ExtendedOptionsParser {
     public void printExtendedOptionsUsage(PrintStream out) {
         out.println("Extended options are:");
         ExtendedOptionKeys.ALL_OPTIONS.getOptions().
-                forEach(option -> out.printf("%s \t %s", option.getArgName(), option.getDescription()));
+                forEach(option -> out.printf("%s \t %s", ((Option) option).getArgName(), ((Option) option).getDescription()));
     }
 
     /**
      * TODO
      */
     private enum ExtendedOptionKeys {
-        JOB_ID("j", true, "id of a Job to run"),
-        INPUT("i", true, "input path"),
-        OUTPUT("o", true, "output path"),
+        JOB_ID("j", true, "id of a Job to run", true),
+        INPUT("i", true, "input path", true),
+        OUTPUT("o", true, "output pat", true),
         CLEAN_OUTPUT_IF_EXISTS("c", false, "clean output if exists");
 
         private final static Options ALL_OPTIONS = new Options();
@@ -146,8 +126,13 @@ public class ExtendedOptionsParser {
 
         private Option option;
 
-        ExtendedOptionKeys(String optKey, boolean hasArgument, String description) {
+        ExtendedOptionKeys(String optKey, boolean hasArgument, String description, boolean isRequired) {
             option = new Option(optKey, hasArgument, description);
+            option.setRequired(isRequired);
+        }
+
+        ExtendedOptionKeys(String optKey, boolean hasArgument, String description) {
+            this(optKey, hasArgument, description, false);
         }
 
         public Option getOption() {

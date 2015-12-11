@@ -1,4 +1,4 @@
-package com.griddynamics.bigdata.framework;
+package com.griddynamics.bigdata.util;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,4 @@
-package com.griddynamics.bigdata.framework;
+package com.griddynamics.bigdata.util;
 
 
 import com.griddynamics.bigdata.CustomizableJob;
@@ -8,7 +8,6 @@ import org.apache.hadoop.util.ToolRunner;
  * TODO
  */
 public class JobRunner {
-
     public static void main(String[] args) throws Exception {
         CustomizableJob job = CustomizableJob.parseJob(args);
         if (job == null) {

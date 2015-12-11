@@ -20,7 +20,7 @@ public class HTMLCounterTest {
     }
 
     @Test
-    public void testJob() throws Exception {
+    public void testJobLocally() throws Exception {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", "file:///");
         conf.set("mapreduce.framework.name", "local");
@@ -28,6 +28,31 @@ public class HTMLCounterTest {
 
         Path input = new Path("input");
         Path output = new Path("output");
+
+        HTMLCounterJob job = new HTMLCounterJob();
+        job.setConf(conf);
+
+        int exitCode = job.run(new String[]{
+                "-j", "com.griddynamics.bigdata.html.HTMLCounterJob",
+                "-i", input.toString(),
+                "-o", output.toString(),
+                "-c"
+        });
+
+        assertThat(exitCode, is(0));
+        //TODO assert output
+
+    }
+
+    // @Test TODO
+    public void testJob() throws Exception {
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", "hdfs://172.26.5.36"); //active NN IP
+        conf.set("mapreduce.framework.name", "yarn");
+        conf.set("yarn.resourcemanager.address", "172.26.5.43:8032"); //active RM IP
+
+        Path input = new Path("/input");
+        Path output = new Path("/output");
 
         HTMLCounterJob job = new HTMLCounterJob();
         job.setConf(conf);
@@ -41,6 +66,5 @@ public class HTMLCounterTest {
 
         assertThat(exitCode, is(0));
         //TODO assert output
-
     }
 }

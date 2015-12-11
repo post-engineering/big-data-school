@@ -2,7 +2,7 @@ package com.griddynamics.bigdata.ua;
 
 
 import com.griddynamics.bigdata.CustomizableJob;
-import com.griddynamics.bigdata.framework.CustomJob;
+import com.griddynamics.bigdata.util.CustomJob;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
