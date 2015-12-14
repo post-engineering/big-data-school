@@ -26,7 +26,6 @@ public class JsoupPayloadProcessorTest {
     private final String PORNOHUB_URL = "http://www.pornhub.com/categories";
     private final Pattern HTML_TAG_PATTERN = Pattern.compile("<(\"[^\"]*\"|'[^']*'|[^'\">])*>");
 
-
     @Test
     public void testExtractTextFromDirtyHTML() {
         String actual = htmlProcessor.extractTextSafely(DIRTY_HTML_1);
@@ -45,6 +44,5 @@ public class JsoupPayloadProcessorTest {
         matcher = HTML_TAG_PATTERN.matcher(actual);
         Assert.assertFalse(matcher.find());
     }
-
 
 }

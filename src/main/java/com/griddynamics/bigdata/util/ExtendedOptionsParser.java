@@ -5,7 +5,6 @@ import org.apache.commons.cli.*;
 import org.apache.hadoop.fs.Path;
 import org.reflections.Reflections;
 
-import java.io.PrintStream;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,8 +34,8 @@ public class ExtendedOptionsParser {
         CustomizableJob job = null;
 
         if (!cmd.hasOption(ExtendedOptionsParser.ExtendedOptionKeys.JOB_ID.getOptionKey())) {
-            System.err.printf("Please specify job class to run. Ex.: -j MyJob");
-            return null;
+            throw new Exception("Please specify job class to run. Ex.: -j MyJob");
+
         }
 
         String jobId = cmd.getOptionValue(ExtendedOptionKeys.JOB_ID.getOptionKey());
@@ -98,20 +97,24 @@ public class ExtendedOptionsParser {
     /**
      * TODO
      *
-     * @param out
+     * @param
      * @return
      */
-    public void printExtendedOptionsUsage(PrintStream out) {
-        out.println("Extended options are:");
+    public String getExtendedOptionsUsage() {
+        StringBuilder sb = new StringBuilder().append("Extended options are:\n");
         ExtendedOptionKeys.ALL_OPTIONS.getOptions().
-                forEach(option -> out.printf("%s \t %s", ((Option) option).getArgName(), ((Option) option).getDescription()));
+                forEach(option -> sb.append(String.format("%s \t %s \n",
+                        ((Option) option).getArgName(),
+                        ((Option) option).getDescription())));
+
+        return sb.toString();
     }
 
     /**
      * TODO
      */
     private enum ExtendedOptionKeys {
-        JOB_ID("j", true, "id of a Job to run", true),
+        JOB_ID("j", true, "id of a Job to run"),
         INPUT("i", true, "input path", true),
         OUTPUT("o", true, "output pat", true),
         CLEAN_OUTPUT_IF_EXISTS("c", false, "clean output if exists");

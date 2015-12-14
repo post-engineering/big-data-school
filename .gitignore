@@ -2,6 +2,7 @@
 ### Hadoop
 input/
 output/
+/src/test/resources/testOutput
 bak
 
 ### Java template

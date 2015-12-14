@@ -1,22 +1,21 @@
 package com.griddynamics.bigdata.html;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+
+import java.net.URISyntaxException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-@RunWith(JUnit4.class)
 public class HTMLCounterTest {
 
-    private static final HTMLMapper mapper = new HTMLMapper();
+    private final String INPUT_ROOT_DIR = "testInput";
+    private final String OUTPUT_ROOT_DIR = "testOutput";
 
-    //@Test TODO
-    public void testJobMapper() {
-        //new MapDriver<LongWritable,Text,IntWritable>().withMapper(mapper).runTest();
+    private String getAbsolutePathForFile(String fileName) throws URISyntaxException {
+        return this.getClass().getClassLoader().getResource(fileName).toURI().toString();
     }
 
     @Test
@@ -26,16 +25,12 @@ public class HTMLCounterTest {
         conf.set("mapreduce.framework.name", "local");
         conf.setInt("mapreduce.task.io.sort.mb", 1);
 
-        Path input = new Path("input");
-        Path output = new Path("output");
-
         HTMLCounterJob job = new HTMLCounterJob();
         job.setConf(conf);
 
         int exitCode = job.run(new String[]{
-                "-j", "com.griddynamics.bigdata.html.HTMLCounterJob",
-                "-i", input.toString(),
-                "-o", output.toString(),
+                "-i", getAbsolutePathForFile(INPUT_ROOT_DIR),
+                "-o", getAbsolutePathForFile(OUTPUT_ROOT_DIR),
                 "-c"
         });
 
@@ -44,23 +39,21 @@ public class HTMLCounterTest {
 
     }
 
-    // @Test TODO
-    public void testJob() throws Exception {
+
+    @Test
+    @Ignore // TODO
+    public void testJobOnCluster() throws Exception {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", "hdfs://172.26.5.36"); //active NN IP
         conf.set("mapreduce.framework.name", "yarn");
         conf.set("yarn.resourcemanager.address", "172.26.5.43:8032"); //active RM IP
 
-        Path input = new Path("/input");
-        Path output = new Path("/output");
 
         HTMLCounterJob job = new HTMLCounterJob();
         job.setConf(conf);
-
         int exitCode = job.run(new String[]{
-                "-j", "HTMLCounterJob",
-                "-i", input.toString(),
-                "-o", output.toString(),
+                "-i", getAbsolutePathForFile(INPUT_ROOT_DIR),
+                "-o", getAbsolutePathForFile(OUTPUT_ROOT_DIR),
                 "-c"
         });
 

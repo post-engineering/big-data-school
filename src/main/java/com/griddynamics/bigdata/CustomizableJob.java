@@ -37,8 +37,8 @@ public abstract class CustomizableJob extends Configured implements Tool {
         try {
             optionsParser = new ExtendedOptionsParser(ROOT_PACKAGE, args);
         } catch (ParseException e) {
-            System.err.printf("Please specify valid input parameters");
-            optionsParser.printExtendedOptionsUsage(System.err);
+            LOG.error("Please specify valid input parameters");
+            LOG.error(optionsParser.getExtendedOptionsUsage());
             return -1;
         }
 
