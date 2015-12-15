@@ -1,7 +1,6 @@
 package com.griddynamics.bigdata.html;
 
 import com.griddynamics.bigdata.xml.XMLMapper;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.w3c.dom.Document;
@@ -20,11 +19,11 @@ import java.util.NoSuchElementException;
 /**
  * TODO
  */
-public class HTMLMapper extends XMLMapper<LongWritable, Text, IntWritable> {
+public class HTMLMapper extends XMLMapper<LongWritable, Text, LongWritable> {
 
     private final static String HTML_XPATH_QUERY = "//proto[@name='data-text-lines']/field/@value";
     private final static Integer MIN_WORD_LENGTH = 3;
-    private final static IntWritable ONE = new IntWritable(1);
+    private final static LongWritable ONE = new LongWritable(1);
 
     private HTMLProcessor processor;
     private XPathExpression expression;
