@@ -1,9 +1,9 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Hadoop
-input/
-output/
+/input/
+/output/
 /src/test/resources/testOutput
-bak
+/src/main/resources/bak
 
 ### Java template
 *.class
