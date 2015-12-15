@@ -1,5 +1,8 @@
 package com.griddynamics.bigdata.input.pdml;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -9,6 +12,8 @@ import java.io.InputStream;
  * Created by msigida on 12/14/15.
  */
 public class PDMLRecordParser implements Closeable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PDMLRecordParser.class);
 
     private static final byte[] RECORD_START = "<packet>".getBytes();
     private static final byte[] RECORD_END = "</packet>".getBytes();
@@ -53,6 +58,11 @@ public class PDMLRecordParser implements Closeable {
 
         if (foundStart) {
             moreDataNeeded = true;
+            LOG.warn("Input stream ended prematurely: didn't found "
+                    + new String(RECORD_END)
+                    + " but already have read "
+                    + getSize()
+                    + " bytes.");
         }
         return false;
     }

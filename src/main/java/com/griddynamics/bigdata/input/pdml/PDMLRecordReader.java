@@ -11,8 +11,6 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,9 +19,6 @@ import java.io.InputStream;
  * Created by msigida on 12/9/15.
  */
 public class PDMLRecordReader extends RecordReader<LongWritable, BytesWritable> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(PDMLRecordReader.class);
-    private static final int BUFFER_SIZE = 1024 * 1024 * 4; // 4 MB
 
     private long start;
     private long end;
