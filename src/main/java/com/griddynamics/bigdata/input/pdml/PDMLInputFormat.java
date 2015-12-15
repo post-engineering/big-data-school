@@ -3,6 +3,9 @@ package com.griddynamics.bigdata.input.pdml;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.io.compress.SplittableCompressionCodec;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
@@ -22,7 +25,8 @@ public class PDMLInputFormat extends FileInputFormat<LongWritable, BytesWritable
     }
 
     @Override
-    protected boolean isSplitable(JobContext context, Path filename) {
-        return false;
+    protected boolean isSplitable(JobContext context, Path file) {
+        final CompressionCodec codec = new CompressionCodecFactory(context.getConfiguration()).getCodec(file);
+        return null == codec || codec instanceof SplittableCompressionCodec;
     }
 }
