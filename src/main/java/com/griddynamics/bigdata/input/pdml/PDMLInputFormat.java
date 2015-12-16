@@ -16,6 +16,10 @@ import java.io.IOException;
 
 /**
  * Created by msigida on 12/9/15.
+ * <p>
+ * Input format for PDML records.
+ * Splits big PDML files (possible for regular .xml and .bz2 formats), then parses it for each PDML packet record.
+ * Mapper will receive record as XML document.
  */
 public class PDMLInputFormat extends FileInputFormat<LongWritable, BytesWritable> {
 

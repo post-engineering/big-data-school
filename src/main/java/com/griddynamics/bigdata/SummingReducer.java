@@ -9,8 +9,10 @@ import java.util.stream.StreamSupport;
 
 /**
  * Created by msigida on 11/24/15.
+ * <p>
+ * Just sums up all values for each key.
  */
-public class CountingReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
+public class SummingReducer extends Reducer<Text, LongWritable, Text, LongWritable> {
 
     @Override
     protected void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {

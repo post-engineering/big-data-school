@@ -10,6 +10,8 @@ import java.io.InputStream;
 
 /**
  * Created by msigida on 12/14/15.
+ * <p>
+ * Searches input for specified record boundary and stores captured record as byte array.
  */
 public class PDMLRecordParser implements Closeable {
 

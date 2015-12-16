@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * The interface declares custom HTML processing functionality
+ * The interface declares custom HTML processing functionality.
  */
-public interface HTMLProcessor {
+public interface HTMLExtractor {
 
     /**
      * Gets HTML document from the specified url

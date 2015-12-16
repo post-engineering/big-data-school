@@ -1,35 +1,37 @@
-package com.griddynamics.bigdata.ua;
+package com.griddynamics.bigdata;
 
 
-import com.griddynamics.bigdata.CustomizableJob;
+import com.griddynamics.bigdata.html.WordCounter;
+import com.griddynamics.bigdata.html.WordExtractor;
+import com.griddynamics.bigdata.input.pdml.PDMLInputFormat;
 import com.griddynamics.bigdata.util.CustomJob;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 
 /**
- * TODO
+ * This job converts extracted from PDML packets HTML to words and then counts them.
  */
 @CustomJob
-public class UACounter extends CustomizableJob {
+public class PacketsToWordsJob extends CustomizableJob {
 
     @Override
     public Class<? extends Mapper> getMapperClass() {
-        return UAMapper.class;
+        return WordExtractor.class;
     }
 
     @Override
     public Class<? extends Reducer> getCombinerClass() {
-        return null;
+        return SummingReducer.class;
     }
 
     @Override
     public Class<? extends Reducer> getReducerClass() {
-        return null;
+        return WordCounter.class;
     }
 
     @Override
     public Class<? extends InputFormat> getInputFormatClass() {
-        return null;
+        return PDMLInputFormat.class;
     }
 }

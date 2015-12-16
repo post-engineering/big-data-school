@@ -17,6 +17,10 @@ import java.io.InputStream;
 
 /**
  * Created by msigida on 12/9/15.
+ * <p>
+ * Parses PDML input for separate records and emits them as mapper value + record index as mapper key.
+ * Supports compressed and split input.
+ * Will go outside of split boundaries if partial record is found.
  */
 public class PDMLRecordReader extends RecordReader<LongWritable, BytesWritable> {
 

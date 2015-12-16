@@ -7,10 +7,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * The class is an implementation of {@link HTMLProcessor}
+ * The class is an implementation of {@link HTMLExtractor}
  * which uses Jsoup framework under the hood.
  */
-public class JsoupProcessor implements HTMLProcessor {
+public class JsoupExtractor implements HTMLExtractor {
 
     @Override
     public String getHtml(String url) throws IOException {

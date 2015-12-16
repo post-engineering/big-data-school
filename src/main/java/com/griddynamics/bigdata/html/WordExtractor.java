@@ -17,15 +17,16 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * TODO
+ * Extracts HTML from PDML packets and then parses it to words.
+ * Outputs each word as the key and '1' as the value.
  */
-public class HTMLMapper extends XMLMapper<LongWritable, Text, LongWritable> {
+public class WordExtractor extends XMLMapper<LongWritable, Text, LongWritable> {
 
     private final static String HTML_XPATH_QUERY = "//proto[@name='data-text-lines']/field/@value";
     private final static Integer MIN_WORD_LENGTH = 3;
     private final static LongWritable ONE = new LongWritable(1);
 
-    private HTMLProcessor processor;
+    private HTMLExtractor extractor;
     private XPathExpression expression;
 
     @Override
@@ -33,7 +34,7 @@ public class HTMLMapper extends XMLMapper<LongWritable, Text, LongWritable> {
         super.setup(context);
 
         try {
-            processor = new JsoupProcessor();
+            extractor = new JsoupExtractor();
             expression = xPath.compile(HTML_XPATH_QUERY);
         } catch (XPathExpressionException e) {
             throw new IOException("Error parsing xPath expression: " + HTML_XPATH_QUERY, e);
@@ -66,7 +67,7 @@ public class HTMLMapper extends XMLMapper<LongWritable, Text, LongWritable> {
     }
 
     private Iterable<String> extractWords(String html) {
-        String text = processor.extractTextSafely(html);
+        String text = extractor.extractTextSafely(html);
         return new WordIterable(text);
     }
 
