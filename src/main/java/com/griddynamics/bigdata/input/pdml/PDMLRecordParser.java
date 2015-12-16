@@ -19,6 +19,7 @@ public class PDMLRecordParser implements Closeable {
 
     private static final byte[] RECORD_START = "<packet>".getBytes();
     private static final byte[] RECORD_END = "</packet>".getBytes();
+    private static final int MAX_RECORD_LENGTH = 1024 * 1024 * 5; // 5 Mb
 
     private final InputStream input;
     private final OpenByteArrayOutputStream out;
@@ -28,7 +29,7 @@ public class PDMLRecordParser implements Closeable {
 
     public PDMLRecordParser(InputStream input) {
         this.input = input;
-        this.out = new OpenByteArrayOutputStream();
+        this.out = new OpenByteArrayOutputStream(MAX_RECORD_LENGTH);
         this.cmp = new RingBuffer(Math.max(RECORD_START.length, RECORD_END.length));
     }
 
@@ -39,8 +40,11 @@ public class PDMLRecordParser implements Closeable {
         }
     }
 
+    // FIXME: I crave for refactoring... ba-a-adly...
     public boolean nextRecord() throws IOException {
         boolean foundStart = false;
+        boolean shouldSkip = false;
+        long skippedBytes = 0;
         int read;
         while ((read = input.read()) != -1) {
             cmp.add((byte) read);
@@ -50,11 +54,28 @@ public class PDMLRecordParser implements Closeable {
                 out.write(RECORD_START);
                 foundStart = true;
             } else if (cmp.contains(RECORD_END) && foundStart) {
+                if (shouldSkip) {
+                    foundStart = false;
+                    shouldSkip = false;
+                    LOG.warn("Skipped lengthy record for " + skippedBytes + " bytes.");
+                    continue;
+                }
+
                 out.write(read);
                 moreDataNeeded = false;
                 return true;
             } else if (foundStart) {
-                out.write(read);
+                if (shouldSkip) {
+                    skippedBytes++;
+                } else {
+                    out.write(read);
+                }
+            }
+
+            if (out.size() >= MAX_RECORD_LENGTH && !shouldSkip) {
+                shouldSkip = true;
+                skippedBytes = MAX_RECORD_LENGTH;
+                LOG.warn("Record length overflows maximum of " + MAX_RECORD_LENGTH + ". Skipping it...");
             }
         }
 
@@ -109,6 +130,10 @@ public class PDMLRecordParser implements Closeable {
     }
 
     private class OpenByteArrayOutputStream extends ByteArrayOutputStream {
+
+        public OpenByteArrayOutputStream(int size) {
+            super(size);
+        }
 
         public byte[] getUnderlying() {
             return buf;
