@@ -20,11 +20,12 @@ public class HTMLCounterTest {
     }
 
     @Test
+    @Ignore
     public void testJobLocally() throws Exception {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", "file:///");
         conf.set("mapreduce.framework.name", "local");
-        conf.setInt("mapreduce.task.io.sort.mb", 1);
+        conf.setInt("mapreduce.task.io.sort.mb", 100);
 
         PacketsToWordsJob job = new PacketsToWordsJob();
         job.setConf(conf);

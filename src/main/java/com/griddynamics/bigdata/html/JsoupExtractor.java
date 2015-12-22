@@ -12,6 +12,19 @@ import java.nio.file.Path;
  */
 public class JsoupExtractor implements HTMLExtractor {
 
+    private String htmlPayload = null;
+
+    public JsoupExtractor parseHtml(String pathToFile) throws IOException{
+        htmlPayload = getHtml(pathToFile);
+        return this;
+    }
+
+
+    public String extractTextSafely() {
+        return extractText(cleanUpStructure(htmlPayload));
+    }
+
+
     @Override
     public String getHtml(String url) throws IOException {
         return Jsoup.connect(url).get().html();
