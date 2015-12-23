@@ -43,21 +43,14 @@ object AnalyticsUtils extends LazyLogging {
     labeledPoints.saveAsTextFile(outputDir)
   }
 
-  def saveDocsAsLabeledPoints(sc: SparkContext,
-                              classLabel: String,
-                              inputDir: String,
-                              outputDir: String): Unit = {
-
-    val labeledPoints = buildLabeledPointsOfClassForDocs(sc, classLabel, inputDir)
-    labeledPoints.saveAsTextFile(outputDir)
-  }
-
   def buildLabeledPointsOfClassForDocs(sc: SparkContext, classLabel: String, inputDir: String): RDD[LabeledPoint] = {
     val docs: RDD[String] = sc.wholeTextFiles(inputDir)
       .map(file => new JsoupExtractor().extractTextSafely(file._2))
 
     buildLabeledPointsOfClassForDocs(classLabel, docs)
-  }  def buildLabeledPointsOfClassForDocs(classLabel: String, docs: RDD[String]): RDD[LabeledPoint] = {
+  }
+
+  def buildLabeledPointsOfClassForDocs(classLabel: String, docs: RDD[String]): RDD[LabeledPoint] = {
     val features: RDD[Vector] = featurizeDocuments(docs)
     features.map(f => LabeledPoint(ClassificationGroup.getLabelIdByName(classLabel), f))
   }
