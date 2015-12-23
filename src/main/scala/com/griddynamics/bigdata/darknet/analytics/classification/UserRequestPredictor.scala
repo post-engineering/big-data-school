@@ -1,6 +1,8 @@
 package com.griddynamics.bigdata.darknet.analytics.classification
 
-import com.griddynamics.bigdata.darknet.analytics.utils.{AnalyticsUtils, ClassificationLabel, PdmlPayloadExtractor}
+import com.griddynamics.bigdata.darknet.analytics.utils.ClassificationGroup.ClassificationGroupValue
+import com.griddynamics.bigdata.darknet.analytics.utils.{AnalyticsUtils, PdmlPayloadExtractor}
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
 import org.apache.spark.mllib.linalg.Vector
@@ -8,20 +10,23 @@ import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 
 /**
-  * TODO
+  * The class defines functions available for classification  of a User request type
   */
-object UserRequestPredictor {
+object UserRequestPredictor extends LazyLogging {
 
   /**
+    * Predicts vectors that fir to the specified ClassificationGroup
     * TODO
-    *
     * @param modelTrainDataPath
     * @param testDataPath
     * @return
     */
-  def predictCountOfClass(sc: SparkContext, classLabel: String, modelTrainDataPath: String, testDataPath: String): Long = {
+  def predictForClass(sc: SparkContext,
+                      classificationGroup: ClassificationGroupValue,
+                      modelTrainDataPath: String,
+                      testDataPath: String): RDD[(Vector, Double)] = {
 
-    val classifiedLPs: RDD[LabeledPoint] = AnalyticsUtils.buildLabeledPointsOfClassForDocs(sc, classLabel, modelTrainDataPath)
+    val classifiedLPs: RDD[LabeledPoint] = AnalyticsUtils.buildLabeledPointsOfClassForDocs(sc, classificationGroup.label, modelTrainDataPath)
     val testData: RDD[String] = PdmlPayloadExtractor.extractHtmlPayloadFromPDML(sc, testDataPath)
 
     //todo think of mapping between predicted vector and actual doc
@@ -34,46 +39,53 @@ object UserRequestPredictor {
 
     val testFeatures: RDD[Vector] = AnalyticsUtils.featurizeDocuments(testData)
 
-    val labelsAndFeatureVectors = predictCountOfClass(sc, classLabel, classifiedLPs, testFeatures)
-    val count = labelsAndFeatureVectors.size
-
-    count
+    val labelsAndFeatureVectors = predictForClass(sc, classificationGroup, classifiedLPs, testFeatures)
+    labelsAndFeatureVectors
   }
 
   /**
+    * The class defines functions available for classification  of a User request type
     * TODO
-    *
     * @param modelLPs
     * @param testFeatures
     * @return
     */
-  def predictCountOfClass(sc: SparkContext, classLabel: String, modelLPs: RDD[LabeledPoint], testFeatures: RDD[Vector]): Array[(Vector, Double)] = {
+  def predictForClass(sc: SparkContext,
+                      classificationGroup: ClassificationGroupValue,
+                      modelLPs: RDD[LabeledPoint],
+                      testFeatures: RDD[Vector]): RDD[(Vector, Double)] = {
+
     val model = SVMWithSGD.train(modelLPs, 10);
 
     val featuresAndLabel = testFeatures.map { features =>
       val label = model.predict(features)
       (features, label)
-    }.filter(p => p._2.equals(ClassificationLabel.getLabelIdByName(classLabel))).collect()
+    }.filter(p => p._2.equals(classificationGroup.classId))
 
     featuresAndLabel
   }
 
   /**
+    * The class defines functions available for classification  of a User request type
     * TODO
-    *
     * @param sc
-    * @param classLabel
+    * @param classificationGroup
     * @param modelPath
     * @param testFeatures
     * @return
     */
-  def predictCountOfClass(sc: SparkContext, classLabel: String, modelPath: String, testFeatures: RDD[Vector]): Array[(Vector, Double)] = {
+  def predictForClass(sc: SparkContext,
+                      classificationGroup: ClassificationGroupValue,
+                      modelPath: String,
+                      testFeatures: RDD[Vector]): RDD[(Vector, Double)] = {
+
     val model = SVMModel.load(sc, modelPath)
+    testFeatures.cache()
 
     val featuresAndLabel = testFeatures.map { features =>
       val label = model.predict(features)
       (features, label)
-    }.filter(p => p._2.equals(ClassificationLabel.getLabelIdByName(classLabel))).collect()
+    }.filter(p => p._2.equals(classificationGroup.classId))
 
     featuresAndLabel
   }

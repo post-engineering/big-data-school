@@ -3,10 +3,14 @@ package com.griddynamics.bigdata.darknet.analytics.job
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
-  * TODO
+  * The base class for jobs running on Spark
   */
 abstract class SparkJob {
 
+  /**
+    * Job entry point.
+    * @param args job arguments
+    */
   def main(args: Array[String]) {
     //initialize spark context
     val sc = {
@@ -21,10 +25,15 @@ abstract class SparkJob {
       new SparkContext(conf)
     }
 
-    val result = execute(sc, args.toList)
+    execute(sc, args.toList)
 
-    System.exit(if (result == 1) 0 else 1)
   }
 
+  /**
+    * Executes job specific logic
+    * @param sc predefined Spark context
+    * @param args job arguments
+    * @return status of job completion: '1' / '0' - success / failure
+    */
   def execute(sc: SparkContext, args: List[String]): Int
 }

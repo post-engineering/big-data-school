@@ -140,6 +140,13 @@
             <version>1.8.3</version>
         </dependency>
 
+        <!-- Web Crawler -->
+        <dependency>
+            <groupId>edu.uci.ics</groupId>
+            <artifactId>crawler4j</artifactId>
+            <version>4.2</version>
+        </dependency>
+
         <!--Unit test artifacts	-->
         <dependency>
             <groupId>junit</groupId>
@@ -219,6 +226,13 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+
+        <!-- scala logging -->
+        <dependency>
+            <groupId>com.typesafe.scala-logging</groupId>
+            <artifactId>scala-logging_2.11</artifactId>
+            <version>3.1.0</version>
         </dependency>
     </dependencies>
 

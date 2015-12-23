@@ -17,7 +17,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * TODO
+ * The utility class provides common operations on PDML-format processing
  */
 public class PDMLUtil {
 
