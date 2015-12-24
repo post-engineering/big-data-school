@@ -26,7 +26,7 @@ object UserRequestPredictor extends LazyLogging {
                       modelTrainDataPath: String,
                       testDataPath: String): RDD[(Vector, Double)] = {
 
-    val classifiedLPs: RDD[LabeledPoint] = AnalyticsUtils.buildLabeledPointsOfClassForDocs(sc, classificationGroup.label, modelTrainDataPath)
+    val classifiedLPs = AnalyticsUtils.buildLabeledPointsOfClassForDocs(sc, classificationGroup, modelTrainDataPath)
     val testData: RDD[String] = PdmlPayloadExtractor.extractHtmlPayloadFromPDML(sc, testDataPath)
 
     //todo think of mapping between predicted vector and actual doc
@@ -39,7 +39,7 @@ object UserRequestPredictor extends LazyLogging {
 
     val testFeatures: RDD[Vector] = AnalyticsUtils.featurizeDocuments(testData)
 
-    val labelsAndFeatureVectors = predictForClass(sc, classificationGroup, classifiedLPs, testFeatures)
+    val labelsAndFeatureVectors = predictForClass(sc, classificationGroup, classifiedLPs._2, testFeatures)
     labelsAndFeatureVectors
   }
 
@@ -55,7 +55,7 @@ object UserRequestPredictor extends LazyLogging {
                       modelLPs: RDD[LabeledPoint],
                       testFeatures: RDD[Vector]): RDD[(Vector, Double)] = {
 
-    val model = SVMWithSGD.train(modelLPs, 10);
+    val model = SVMWithSGD.train(modelLPs, 100);
 
     val featuresAndLabel = testFeatures.map { features =>
       val label = model.predict(features)
@@ -89,6 +89,7 @@ object UserRequestPredictor extends LazyLogging {
 
     featuresAndLabel
   }
+
 }
 
 

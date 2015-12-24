@@ -1,5 +1,6 @@
 package com.griddynamics.bigdata.darknet.analytics.utils
 
+import com.griddynamics.bigdata.darknet.analytics.utils.ClassificationGroup.ClassificationGroupValue
 import com.griddynamics.bigdata.html.JsoupExtractor
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.spark.SparkContext
@@ -17,8 +18,8 @@ import org.apache.spark.rdd.RDD
 object AnalyticsUtils extends LazyLogging {
 
   def saveDocsAsFeatureVectors(docs: RDD[String], outputDir: String): Unit = {
-    val featureVectors = featurizeDocuments(docs)
-    featureVectors.saveAsTextFile(outputDir)
+    featurizeDocuments(docs)
+      .saveAsTextFile(outputDir)
   }
 
   def featurizeDocuments(docs: RDD[String]): RDD[Vector] = {
@@ -29,30 +30,52 @@ object AnalyticsUtils extends LazyLogging {
     tf_idf
   }
 
-  def saveDocsAsLabeledPoints(classLabel: String, docs: RDD[String], outputDir: String): Unit = {
-    val labeledPoints = buildLabeledPointsOfClassForDocs(classLabel, docs)
+  //TODO
+  def saveDocsAsFeatureVectors(docs: RDD[String],
+                               outputDir: String,
+                               termDictionary: TFiDFDictionary): Unit = {
+    val featureVectors = featurizeDocuments(docs, termDictionary)
+    featureVectors.saveAsTextFile(outputDir)
+  }
+
+  def saveDocsAsLabeledPoints(classificationGroup: ClassificationGroupValue,
+                              docs: RDD[String],
+                              outputDir: String): Unit = {
+    val labeledPoints = buildLabeledPointsOfClassForDocs(classificationGroup, docs)._2
     MLUtils.saveAsLibSVMFile(labeledPoints, outputDir)
   }
 
   def saveDocsAsLabeledPoints(sc: SparkContext,
-                              classLabel: String,
+                              classificationGroup: ClassificationGroupValue,
                               inputDir: String,
-                              outputDir: String): Unit = {
+                              outputDir: String
+                             ): Unit = {
 
-    val labeledPoints = buildLabeledPointsOfClassForDocs(sc, classLabel, inputDir)
+    val labeledPoints = buildLabeledPointsOfClassForDocs(sc, classificationGroup, inputDir)._2
     labeledPoints.saveAsTextFile(outputDir)
   }
 
-  def buildLabeledPointsOfClassForDocs(sc: SparkContext, classLabel: String, inputDir: String): RDD[LabeledPoint] = {
+  def buildLabeledPointsOfClassForDocs(sc: SparkContext,
+                                       classificationGroup: ClassificationGroupValue,
+                                       inputDir: String
+                                      ): (TFiDFDictionary, RDD[LabeledPoint]) = {
     val docs: RDD[String] = sc.wholeTextFiles(inputDir)
       .map(file => new JsoupExtractor().extractTextSafely(file._2))
 
-    buildLabeledPointsOfClassForDocs(classLabel, docs)
+    buildLabeledPointsOfClassForDocs(classificationGroup, docs)
   }
 
-  def buildLabeledPointsOfClassForDocs(classLabel: String, docs: RDD[String]): RDD[LabeledPoint] = {
-    val features: RDD[Vector] = featurizeDocuments(docs)
-    features.map(f => LabeledPoint(ClassificationGroup.getLabelIdByName(classLabel), f))
+  def buildLabeledPointsOfClassForDocs(classificationGroup: ClassificationGroupValue,
+                                       docs: RDD[String]): (TFiDFDictionary, RDD[LabeledPoint]) = {
+    val termDictionary = new TFiDFDictionary(docs)
+    val modelLPs = featurizeDocuments(docs, termDictionary)
+      .map(f => LabeledPoint(classificationGroup.classId, f))
+    (termDictionary, modelLPs)
+  }
+
+  //TODO
+  def featurizeDocuments(docs: RDD[String], dictionary: TFiDFDictionary): RDD[Vector] = {
+    dictionary.featurizeDocument(docs.map(doc => doc.split("\\s").toSeq))
   }
 
   def saveSVMModel(sc: SparkContext,
