@@ -1,7 +1,7 @@
 package com.griddynamics.bigdata.darknet.analytics.job
 
 import com.griddynamics.bigdata.darknet.analytics.utils.AnalyticsUtils
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.util.MLUtils
 

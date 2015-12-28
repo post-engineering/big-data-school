@@ -40,7 +40,7 @@ public class PDMLUtil {
         }
     }
 
-    public Document unmarshalizePDMLPacket(byte[] packetBytes, int offset, int length) throws IOException, InterruptedException {
+    public Document unmarshalizeXmlDocument(byte[] packetBytes, int offset, int length) throws IOException, InterruptedException {
         InputStream stream = new ByteArrayInputStream(packetBytes, offset, length);
         final Document document;
         try {
@@ -57,7 +57,7 @@ public class PDMLUtil {
             InterruptedException,
             XPathExpressionException {
 
-        Document document = unmarshalizePDMLPacket(packetBytes, offset, length);
+        Document document = unmarshalizeXmlDocument(packetBytes, offset, length);
         String html = extractHtmlPayloadFromPacketDocument(document);
         return html;
     }

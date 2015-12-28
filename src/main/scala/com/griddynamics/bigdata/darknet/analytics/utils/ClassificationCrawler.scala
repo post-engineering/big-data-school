@@ -2,7 +2,7 @@ package com.griddynamics.bigdata.darknet.analytics.utils
 
 import java.util.regex.Pattern
 
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import edu.uci.ics.crawler4j.crawler.{Page, WebCrawler}
 import edu.uci.ics.crawler4j.url.WebURL
 

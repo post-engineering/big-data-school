@@ -2,7 +2,7 @@ package com.griddynamics.bigdata.darknet.analytics.job
 
 import com.griddynamics.bigdata.darknet.analytics.classification.UserRequestPredictor
 import com.griddynamics.bigdata.darknet.analytics.utils.ClassificationGroup
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.util.MLUtils
 
