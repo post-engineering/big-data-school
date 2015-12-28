@@ -1,9 +1,10 @@
 package com.griddynamics.bigdata.darknet.analytics.job.wiki
 
 import com.griddynamics.bigdata.darknet.analytics.job.SparkJob
-import com.griddynamics.bigdata.darknet.analytics.utils.{TFiDFDictionary, WikiPayloadExtractor}
+import com.griddynamics.bigdata.darknet.analytics.utils.{AnalyticsUtils, WikiPayloadExtractor}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
+import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 
@@ -18,32 +19,24 @@ object FeaturizeWikiArticlesJob extends SparkJob with LazyLogging {
     val targetCategoriesPath = args(1)
     val outputDirPath = args(2)
 
-
-    val targetCategoriesSet = WikiPayloadExtractor.loadTargetCategories(sc, targetCategoriesPath)
-      .collect()
+    val categoriesIndex = WikiPayloadExtractor.loadTargetCategories(sc, targetCategoriesPath)
+      .collect
       .toSet
-
-    val categoriesIndex = targetCategoriesSet.zipWithIndex.toMap
+      .zipWithIndex
+      .toMap[String, Int]
 
     val wikiArticles: RDD[String] = WikiPayloadExtractor.loadWikiArticles(sc, wikiDumpPath)
-    // val test0 = wikiArticles.collect()
 
     val categorizedWikiArticles: RDD[(String, String)] = WikiPayloadExtractor.categorizeArticlesByTarget(sc, wikiArticles, categoriesIndex)
-    //val test1 = categorizedWikiArticles.collect()
 
-    val tokenizedCategorizedWikiArticles = categorizedWikiArticles
+    val classifiedWikiArticles = categorizedWikiArticles
       .map { case (k, v) =>
         (categoriesIndex.getOrElse(k, 0).toDouble, WikiPayloadExtractor.tokenizeArticleContent(v))
-      }
+      }.cache()
 
+    val classifiedFeatures: RDD[(Double, Vector)] = AnalyticsUtils.featurizeCategorizedDocuments(classifiedWikiArticles)
 
-    tokenizedCategorizedWikiArticles.cache()
-    //val test2 = tokenizedCategorizedWikiArticles.collect()
-
-    val categorizedFeatures = TFiDFDictionary.featurizeCategorizedDocuments(tokenizedCategorizedWikiArticles)
-    // val test3 = categorizedFeatures.collect()
-
-    val lps = categorizedFeatures.map({ case (k, v) => LabeledPoint(k, v) })
+    val lps = classifiedFeatures.map { case (k, v) => LabeledPoint(k, v) }
 
     lps.saveAsTextFile(outputDirPath)
     1

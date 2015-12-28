@@ -13,14 +13,12 @@ import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 
 /**
-  * Created by ipertushin on 26.12.15.
+  * TODO
   */
 object WikiPayloadExtractor {
   private val CATEGORY_PATTERN = """\[\[Category:(.{2,50}[^\|\*;:\)\(\[\]]+)\]\]""".r
   private val ARTICLE_CONTENT_PATTERN = """<text xml:space=\"preserve\">([\s\S]*?)<\/text>""".r
-  //<text xml:space=\"preserve\">((.|\n)*)<\/text>
-  private val ARTICLE_TITLE_PATTERN =
-    """<title>(.*)<\\/title>""".r
+  private val ARTICLE_TITLE_PATTERN = """<title>(.*)<\\/title>""".r
   private val REDIRECT_PAGE = "#REDIRECT"
   private val START_DOC = "<text xml:space=\"preserve\">"
   private val END_DOC = "</text>"
@@ -71,12 +69,12 @@ object WikiPayloadExtractor {
   def categorizeArticles(sc: SparkContext, articles: RDD[String]): RDD[(String, String)] = {
     articles.map(article => (findCategory(article), getArticleContent(article)))
       .filter { case (k, v) =>
-        !isUnknown(k) &&
+        !isUnknownCategory(k) &&
           !isRedirect(v)
       }
   }
 
-  def isUnknown(k: String): Boolean = {
+  def isUnknownCategory(k: String): Boolean = {
     k.eq(UNKNOWN_CATEGORY)
   }
 

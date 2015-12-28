@@ -1,7 +1,7 @@
 package com.griddynamics.bigdata.darknet.analytics.job
 
 import com.griddynamics.bigdata.darknet.analytics.classification.UserRequestPredictor
-import com.griddynamics.bigdata.darknet.analytics.utils.{AnalyticsUtils, ClassificationGroup, TFiDFDictionary}
+import com.griddynamics.bigdata.darknet.analytics.utils.{AnalyticsUtils, ClassificationGroup}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
 
@@ -23,18 +23,15 @@ object PredictPornRequestsJob extends SparkJob with LazyLogging {
 
     val docs = sc.wholeTextFiles(testDocsDir).map(doc => doc._2)
     //todo tokenize
-    val testFeatureVectors = TFiDFDictionary.featurizeDocuments(docs.map(doc => doc.split("\\s")))
-
+    val testFeatureVectors = AnalyticsUtils.featurizeDocuments(docs.map(doc => doc.split("\\s")))
 
     val predictedVectorsAndLabels = UserRequestPredictor.predictForClass(sc, classificationGroup, modelLPs, testFeatureVectors)
-
 
     logger.info(s"Overall number of featureVectors for model test: ${testFeatureVectors.count()}")
     logger.info(s"Number of requests predicted for class ${classificationGroup.label} : ${predictedVectorsAndLabels.count()}")
 
     //FIXME!!!
     //correlatedDocs.saveAsTextFile(outputDir)
-
     1
 
   }

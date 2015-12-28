@@ -1,7 +1,7 @@
 package com.griddynamics.bigdata.darknet.analytics.classification
 
 import com.griddynamics.bigdata.darknet.analytics.utils.ClassificationGroup.ClassificationGroupValue
-import com.griddynamics.bigdata.darknet.analytics.utils.{AnalyticsUtils, PdmlPayloadExtractor, TFiDFDictionary}
+import com.griddynamics.bigdata.darknet.analytics.utils.{AnalyticsUtils, PdmlPayloadExtractor}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
@@ -29,15 +29,7 @@ object UserRequestPredictor extends LazyLogging {
     val classifiedLPs = AnalyticsUtils.buildLabeledPointsOfClassForDocs(sc, classificationGroup, modelTrainDataPath)
     val testData: RDD[String] = PdmlPayloadExtractor.extractHtmlPayloadFromPDML(sc, testDataPath)
 
-    //todo think of mapping between predicted vector and actual doc
-    /*  val vecToDoc = testData.map { doc =>
-        val docWords: Seq[String] = doc.split("\\s").toSeq
-        val tf: Vector = new HashingTF().transform(docWords)
-
-        (tf, doc)
-      }.persist()*/
-
-    val testFeatures: RDD[Vector] = TFiDFDictionary.featurizeDocuments(testData.map(doc => doc.split("\\s").toSeq))
+    val testFeatures: RDD[Vector] = AnalyticsUtils.featurizeDocuments(testData.map(doc => doc.split("\\s").toSeq))
 
     val labelsAndFeatureVectors = predictForClass(sc, classificationGroup, classifiedLPs, testFeatures)
     labelsAndFeatureVectors
@@ -61,12 +53,8 @@ object UserRequestPredictor extends LazyLogging {
       val label = model.predict(features)
       (features, label)
     }
-    val ff = featuresAndLabel.collect()
 
-    val hh = featuresAndLabel.filter(p => p._2.equals(classificationGroup.classId))
-
-    var f = hh.collect()
-    hh
+    featuresAndLabel.filter(p => p._2.equals(classificationGroup.classId))
 
   }
 

@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
 
 /**
-  * Created by ipertushin on 24.12.15.
+  * TODO
   */
 object ExtractHTMLFromPDMLJob extends SparkJob with LazyLogging {
 
