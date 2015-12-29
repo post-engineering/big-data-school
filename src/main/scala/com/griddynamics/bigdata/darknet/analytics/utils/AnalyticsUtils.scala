@@ -4,7 +4,6 @@ import com.griddynamics.bigdata.darknet.analytics.utils.ClassificationGroup.Clas
 import com.griddynamics.bigdata.html.JsoupExtractor
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
-import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.mllib.feature
 import org.apache.spark.mllib.feature.{HashingTF, IDF, Normalizer}
 import org.apache.spark.mllib.linalg.Vector
@@ -18,29 +17,17 @@ import org.apache.spark.rdd.RDD
   */
 object AnalyticsUtils extends LazyLogging {
 
-  //TODO implement
   def tokenizeDocuments(docs: RDD[String]): RDD[Seq[String]] = {
-    throw new UnsupportedOperationException
+    docs.map(doc => tokenizeDocument(doc))
   }
 
   def tokenizeDocument(doc: String): Seq[String] = {
-    throw new UnsupportedOperationException
+    doc.toLowerCase.split("\\s").toSeq
   }
 
 
-  /*  def featurizeDocument(doc: Seq[String]): RDD[Vector] = {
-      val tf = new HashingTF().transform(docs) //TODO tokenize?
-      val idf = new IDF().fit(tf);
-      val tf_idf = idf.transform(tf)
-
-      val normalized = new Normalizer().transform(tf_idf)
-      val normalizedAndScaled = new feature.StandardScaler().fit(normalized).transform(normalized)
-
-      normalizedAndScaled
-    }*/
-
   def featurizeCategorizedDocuments(categorizedDocs: RDD[(Double, Seq[String])]): RDD[(Double, Vector)] = {
-    val tf = categorizedDocs.map { case (k, v) => (k, new HashingTF().transform(v)) } //TODO tokenize?
+    val tf = categorizedDocs.map { case (k, v) => (k, new HashingTF().transform(v)) }
     val idf = new IDF().fit(tf.map { case (k, v) => v });
     val tf_idf = tf.map { case (k, v) => (k, idf.transform(v)) }
 
@@ -61,8 +48,23 @@ object AnalyticsUtils extends LazyLogging {
     featureVectors.saveAsTextFile(outputDir)
   }
 
+  def saveDocsAsLabeledPoints(classificationGroup: ClassificationGroupValue,
+                              docs: RDD[Seq[String]],
+                              outputDir: String): Unit = {
+    val labeledPoints = buildLabeledPointsOfClassForDocs(classificationGroup, docs)
+    MLUtils.saveAsLibSVMFile(labeledPoints, outputDir)
+  }
+
+  def buildLabeledPointsOfClassForDocs(classificationGroup: ClassificationGroupValue,
+                                       docs: RDD[Seq[String]]): RDD[LabeledPoint] = {
+
+    val modelLPs = featurizeDocuments(docs)
+      .map(f => LabeledPoint(classificationGroup.classId, f))
+    modelLPs
+  }
+
   def featurizeDocuments(docs: RDD[Seq[String]]): RDD[Vector] = {
-    val tf = new HashingTF().transform(docs) //TODO tokenize?
+    val tf = new HashingTF().transform(docs)
     val idf = new IDF().fit(tf);
     val tf_idf = idf.transform(tf)
 
@@ -72,11 +74,20 @@ object AnalyticsUtils extends LazyLogging {
     normalizedAndScaled
   }
 
-  def saveDocsAsLabeledPoints(classificationGroup: ClassificationGroupValue,
-                              docs: RDD[Seq[String]],
-                              outputDir: String): Unit = {
-    val labeledPoints = buildLabeledPointsOfClassForDocs(classificationGroup, docs)
-    MLUtils.saveAsLibSVMFile(labeledPoints, outputDir)
+  //TODO refactor
+  def featurizeDocumentsWithContext(docs: RDD[Seq[String]]): RDD[(Seq[String], Vector)] = {
+    val tfWithContext: RDD[(Seq[String], Vector)] = docs.map(doc => (doc, new HashingTF().transform(doc)))
+    val idf = new IDF().fit(tfWithContext.map { case (k, v) => v });
+    val tf_idf = tfWithContext.map { case (k, v) => (k, idf.transform(v)) }
+
+    val normalized = tf_idf.map { case (k, v) =>
+      (k, new Normalizer().transform(v))
+    }
+
+    val scaleModel = new feature.StandardScaler().fit(normalized.map { case (k, v) => v })
+    val normalizedAndScaled = normalized.map { case (k, v) => (k, scaleModel.transform(v)) }
+
+    normalizedAndScaled
   }
 
   def saveDocsAsLabeledPoints(sc: SparkContext,
@@ -99,20 +110,11 @@ object AnalyticsUtils extends LazyLogging {
     buildLabeledPointsOfClassForDocs(classificationGroup, docs.map(doc => doc.split("\\s")))
   }
 
-  def buildLabeledPointsOfClassForDocs(classificationGroup: ClassificationGroupValue,
-                                       docs: RDD[Seq[String]]): RDD[LabeledPoint] = {
-
-    val modelLPs = featurizeDocuments(docs)
-      .map(f => LabeledPoint(classificationGroup.classId, f))
-    modelLPs
-  }
-
   def saveSVMModel(sc: SparkContext,
                    modelFeatures: RDD[LabeledPoint],
                    numIterations: Int,
                    modelOutputDir: String): Unit = {
-    val model = SVMWithSGD.train(modelFeatures, numIterations);
-    model.save(sc, modelOutputDir)
+
   }
 
 }

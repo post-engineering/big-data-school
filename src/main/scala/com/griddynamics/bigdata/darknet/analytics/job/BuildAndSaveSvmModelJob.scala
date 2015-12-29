@@ -13,7 +13,7 @@ object BuildAndSaveSvmModelJob extends SparkJob with LazyLogging {
   override def execute(sc: SparkContext, args: List[String]): Int = {
     val modelLPsPath = args(0)
     val modelOutputDir = args(1)
-    val trainTime = Integer.parseInt(args(2))
+    val trainTime = args(2).toInt
 
     val modelLPs = MLUtils.loadLabeledPoints(sc, modelLPsPath)
     AnalyticsUtils.saveSVMModel(sc, modelLPs, trainTime, modelOutputDir)
