@@ -20,6 +20,7 @@ object FeaturizeWikiArticlesJob extends SparkJob with LazyLogging {
     val outputDirPath = args(2)
 
     val categoriesIndex = WikiPayloadExtractor.loadTargetCategories(sc, targetCategoriesPath)
+      .distinct
       .collect
       .toSet
       .zipWithIndex
@@ -29,9 +30,17 @@ object FeaturizeWikiArticlesJob extends SparkJob with LazyLogging {
 
     val categorizedWikiArticles: RDD[(String, String)] = WikiPayloadExtractor.categorizeArticlesByTarget(sc, wikiArticles, categoriesIndex)
 
+    val matchingCategories = categorizedWikiArticles.map { case (k, v) => k }
+      .distinct
+      .collect
+      .toSet
+      .zipWithIndex
+      .toMap[String, Int]
+
+
     val classifiedWikiArticles = categorizedWikiArticles
       .map { case (k, v) =>
-        (categoriesIndex.getOrElse(k, 0).toDouble, WikiPayloadExtractor.tokenizeArticleContent(v))
+        (matchingCategories.get(k).get.toDouble, WikiPayloadExtractor.tokenizeArticleContent(v))
       }.cache()
 
     val classifiedFeatures: RDD[(Double, Vector)] = AnalyticsUtils.featurizeCategorizedDocuments(classifiedWikiArticles)
