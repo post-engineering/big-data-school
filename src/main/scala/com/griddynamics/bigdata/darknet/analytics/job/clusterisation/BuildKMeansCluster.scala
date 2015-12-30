@@ -1,5 +1,6 @@
-package com.griddynamics.bigdata.darknet.analytics.job
+package com.griddynamics.bigdata.darknet.analytics.job.clusterisation
 
+import com.griddynamics.bigdata.darknet.analytics.job.SparkJob
 import com.griddynamics.bigdata.darknet.analytics.utils.AnalyticsUtils._
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext

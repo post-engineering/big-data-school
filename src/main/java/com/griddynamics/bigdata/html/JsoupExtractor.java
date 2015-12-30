@@ -7,14 +7,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * The class is an implementation of {@link HTMLExtractor}
+ * The class is an implementation of {@link HtmlExtractor}
  * which uses Jsoup framework under the hood.
  */
-public class JsoupExtractor implements HTMLExtractor {
+public class JsoupExtractor implements HtmlExtractor {
 
     private String htmlPayload = null;
 
-    public JsoupExtractor parseHtml(String pathToFile) throws IOException{
+    public JsoupExtractor parseHtml(String pathToFile) throws IOException {
         htmlPayload = getHtml(pathToFile);
         return this;
     }

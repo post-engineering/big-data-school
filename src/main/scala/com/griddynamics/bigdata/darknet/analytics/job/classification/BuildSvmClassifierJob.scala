@@ -1,5 +1,6 @@
-package com.griddynamics.bigdata.darknet.analytics.job
+package com.griddynamics.bigdata.darknet.analytics.job.classification
 
+import com.griddynamics.bigdata.darknet.analytics.job.SparkJob
 import com.griddynamics.bigdata.darknet.analytics.utils.AnalyticsUtils
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
@@ -8,7 +9,7 @@ import org.apache.spark.mllib.util.MLUtils
 /**
   * TODO
   */
-object BuildAndSaveSvmModelJob extends SparkJob with LazyLogging {
+object BuildSvmClassifierJob extends SparkJob with LazyLogging {
 
   override def execute(sc: SparkContext, args: List[String]): Int = {
     val modelLPsPath = args(0)

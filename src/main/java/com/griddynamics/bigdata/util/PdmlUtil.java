@@ -1,6 +1,6 @@
 package com.griddynamics.bigdata.util;
 
-import com.griddynamics.bigdata.html.HTMLExtractor;
+import com.griddynamics.bigdata.html.HtmlExtractor;
 import com.griddynamics.bigdata.html.JsoupExtractor;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -19,23 +19,23 @@ import java.nio.charset.StandardCharsets;
 /**
  * The utility class provides common operations on PDML-format processing
  */
-public class PDMLUtil {
+public class PdmlUtil {
 
     private final static String HTML_XPATH_QUERY = "//proto[@name='data-text-lines']/field/@value";
     private final static Integer MIN_WORD_LENGTH = 3;
     protected XPath xPath;
     protected DocumentBuilder builder;
-    private HTMLExtractor extractor;
+    private HtmlExtractor extractor;
     private XPathExpression expression;
 
-    public PDMLUtil() throws Exception {
+    public PdmlUtil() throws IOException {
         try {
             xPath = XPathFactory.newInstance().newXPath();
             builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 
             extractor = new JsoupExtractor();
             expression = xPath.compile(HTML_XPATH_QUERY);
-        } catch (ParserConfigurationException e) {
+        } catch (ParserConfigurationException | XPathExpressionException e) {
             throw new IOException("Error creating XML document builder", e);
         }
     }
@@ -58,12 +58,12 @@ public class PDMLUtil {
             XPathExpressionException {
 
         Document document = unmarshalizeXmlDocument(packetBytes, offset, length);
-        String html = extractHtmlPayloadFromPacketDocument(document);
+        String html = extractHtmlPayloadFromPacket(document);
         return html;
     }
 
 
-    public String extractHtmlPayloadFromPacketDocument(Document document) throws XPathExpressionException {
+    public String extractHtmlPayloadFromPacket(Document document) throws XPathExpressionException {
         NodeList values = (NodeList) expression.evaluate(document, XPathConstants.NODESET);
         if (values.getLength() == 0) {
             return null;

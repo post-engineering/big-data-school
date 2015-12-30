@@ -9,13 +9,11 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Created by msigida on 12/14/15.
- * <p>
  * Searches input for specified record boundary and stores captured record as byte array.
  */
-public class XMLRecordParser implements Closeable {
+public class XmlRecordParser implements Closeable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(XMLRecordParser.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XmlRecordParser.class);
     private static final int MAX_RECORD_LENGTH = 1024 * 1024 * 10; // 10 Mb
     private final byte[] RECORD_START;
     private final byte[] RECORD_END;
@@ -25,7 +23,7 @@ public class XMLRecordParser implements Closeable {
 
     private boolean moreDataNeeded = false;
 
-    public XMLRecordParser(InputStream input, String openingTag, String closingTag) {
+    public XmlRecordParser(InputStream input, String openingTag, String closingTag) {
         this.input = input;
         this.RECORD_START = openingTag.getBytes();
         this.RECORD_END = closingTag.getBytes();

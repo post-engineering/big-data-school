@@ -15,12 +15,11 @@ abstract class SparkJob {
     //initialize spark context
     val sc = {
       val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
-      val jarsOpt = SparkContext.jarOfObject(this);
+      val jarsOpt = SparkContext.jarOfObject(this)
 
-      if (jarsOpt != None) {
-        conf.setJars(List(jarsOpt.get))
-      } else {
-        conf.setMaster("local[4]")
+      jarsOpt match {
+        case Some(ops) => conf.setJars(List(ops))
+        case None => conf.setMaster("local[4]")
       }
       new SparkContext(conf)
     }

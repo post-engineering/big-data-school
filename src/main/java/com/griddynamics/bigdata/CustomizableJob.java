@@ -3,6 +3,7 @@ package com.griddynamics.bigdata;
 
 import com.griddynamics.bigdata.util.ExtendedOptionsParser;
 import org.apache.commons.cli.ParseException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -16,6 +17,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 /**
  * TODO
@@ -44,6 +47,7 @@ public abstract class CustomizableJob extends Configured implements Tool {
 
         LOG.info("Starting...");
 
+        applyCustomConfiguration();
         Job job = Job.getInstance(getConf(), getMapperClass().getCanonicalName());
 
         job.setJarByClass(CustomizableJob.class);
@@ -65,6 +69,14 @@ public abstract class CustomizableJob extends Configured implements Tool {
         FileOutputFormat.setOutputPath(job, outputPath);
 
         return job.waitForCompletion(true) ? 0 : 1;
+    }
+
+    private void applyCustomConfiguration() {
+        Map.Entry<String, String> entry;
+        while (getCustomConfiguration().iterator().hasNext()) {
+            entry = getCustomConfiguration().iterator().next();
+            getConf().set(entry.getKey(), entry.getValue());
+        }
     }
 
     /**
@@ -94,6 +106,13 @@ public abstract class CustomizableJob extends Configured implements Tool {
      * @return
      */
     public abstract Class<? extends org.apache.hadoop.mapreduce.InputFormat> getInputFormatClass();
+
+    /**
+     * TODO
+     *
+     * @return
+     */
+    public abstract Configuration getCustomConfiguration();
 
     //TODO Output/Input format?
 }

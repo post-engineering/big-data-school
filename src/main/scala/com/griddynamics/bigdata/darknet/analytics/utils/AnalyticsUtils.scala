@@ -1,6 +1,5 @@
 package com.griddynamics.bigdata.darknet.analytics.utils
 
-import com.griddynamics.bigdata.darknet.analytics.utils.ClassificationGroup.ClassificationGroupValue
 import com.griddynamics.bigdata.html.JsoupExtractor
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
@@ -48,18 +47,18 @@ object AnalyticsUtils extends LazyLogging {
     featureVectors.saveAsTextFile(outputDir)
   }
 
-  def saveDocsAsLabeledPoints(classificationGroup: ClassificationGroupValue,
+  def saveDocsAsLabeledPoints(classificationGroup: Double,
                               docs: RDD[Seq[String]],
                               outputDir: String): Unit = {
     val labeledPoints = buildLabeledPointsOfClassForDocs(classificationGroup, docs)
     MLUtils.saveAsLibSVMFile(labeledPoints, outputDir)
   }
 
-  def buildLabeledPointsOfClassForDocs(classificationGroup: ClassificationGroupValue,
+  def buildLabeledPointsOfClassForDocs(classificationGroup: Double,
                                        docs: RDD[Seq[String]]): RDD[LabeledPoint] = {
 
     val modelLPs = featurizeDocuments(docs)
-      .map(f => LabeledPoint(classificationGroup.classId, f))
+      .map(f => LabeledPoint(classificationGroup, f))
     modelLPs
   }
 
@@ -91,7 +90,7 @@ object AnalyticsUtils extends LazyLogging {
   }
 
   def saveDocsAsLabeledPoints(sc: SparkContext,
-                              classificationGroup: ClassificationGroupValue,
+                              classificationGroup: Double,
                               inputDir: String,
                               outputDir: String
                              ): Unit = {
@@ -101,7 +100,7 @@ object AnalyticsUtils extends LazyLogging {
   }
 
   def buildLabeledPointsOfClassForDocs(sc: SparkContext,
-                                       classificationGroup: ClassificationGroupValue,
+                                       classificationGroup: Double,
                                        inputDir: String
                                       ): RDD[LabeledPoint] = {
     val docs: RDD[String] = sc.wholeTextFiles(inputDir)

@@ -1,5 +1,6 @@
-package com.griddynamics.bigdata.darknet.analytics.job
+package com.griddynamics.bigdata.darknet.analytics.job.classification
 
+import com.griddynamics.bigdata.darknet.analytics.job.SparkJob
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.tree.RandomForest

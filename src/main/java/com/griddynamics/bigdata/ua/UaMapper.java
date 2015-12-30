@@ -13,7 +13,7 @@ import java.io.IOException;
 /**
  * Created by msigida on 11/24/15.
  */
-public class UAMapper extends XMLMapper<LongWritable, Text, LongWritable> {
+public class UaMapper extends XMLMapper<LongWritable, Text, LongWritable> {
 
     private UserAgentStringParser parser;
 

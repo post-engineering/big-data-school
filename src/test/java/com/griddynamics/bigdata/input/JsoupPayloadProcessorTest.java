@@ -1,6 +1,6 @@
 package com.griddynamics.bigdata.input;
 
-import com.griddynamics.bigdata.html.HTMLExtractor;
+import com.griddynamics.bigdata.html.HtmlExtractor;
 import com.griddynamics.bigdata.html.JsoupExtractor;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 @RunWith(JUnit4.class)
 public class JsoupPayloadProcessorTest {
 
-    private final HTMLExtractor htmlExtractor = new JsoupExtractor();
+    private final HtmlExtractor htmlExtractor = new JsoupExtractor();
     /*
      has no closing <p> tag
      */

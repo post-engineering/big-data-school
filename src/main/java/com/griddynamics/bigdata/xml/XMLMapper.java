@@ -1,6 +1,6 @@
 package com.griddynamics.bigdata.xml;
 
-import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -18,7 +18,7 @@ import java.io.InputStream;
 /**
  * TODO
  */
-public abstract class XMLMapper<KEYIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN, BytesWritable, KEYOUT, VALUEOUT> {
+public abstract class XMLMapper<KEYIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN, Text, KEYOUT, VALUEOUT> {
 
     protected XPath xPath;
     protected DocumentBuilder builder;
@@ -34,7 +34,7 @@ public abstract class XMLMapper<KEYIN, KEYOUT, VALUEOUT> extends Mapper<KEYIN, B
     }
 
     @Override
-    protected void map(KEYIN key, BytesWritable value, Context context) throws IOException, InterruptedException {
+    protected void map(KEYIN key, Text value, Context context) throws IOException, InterruptedException {
         InputStream stream = new ByteArrayInputStream(value.getBytes(), 0, value.getLength());
         try {
             final Document document = builder.parse(stream);

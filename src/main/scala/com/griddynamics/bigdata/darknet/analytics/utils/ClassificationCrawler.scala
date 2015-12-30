@@ -31,7 +31,7 @@ object ClassificationCrawler extends WebCrawler with LazyLogging {
     * @param classificationGroup
     * @return
     */
-  def doesPageFitToClass(page: String, classificationGroup: ClassificationGroup.ClassificationGroupValue): Boolean = {
+  def doesPageFitToClass(page: String, classificationGroup: String): Boolean = {
     //TODO
     false
   }

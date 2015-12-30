@@ -6,7 +6,7 @@ import java.nio.file.Path;
 /**
  * The interface declares custom HTML processing functionality.
  */
-public interface HTMLExtractor {
+public interface HtmlExtractor {
 
     /**
      * Gets HTML document from the specified url

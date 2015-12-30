@@ -1,6 +1,6 @@
 package com.griddynamics.bigdata.darknet.analytics.utils
 
-import com.griddynamics.bigdata.input.xml.XMLInputFormat
+import com.griddynamics.bigdata.input.xml.XmlInputFormat
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
 import org.apache.mahout.text.wikipedia.WikipediaAnalyzer
@@ -37,15 +37,15 @@ object WikiPayloadExtractor {
   def loadWikiArticles(sc: SparkContext, wikiDumpPath: String): RDD[String] = {
 
     val hadoopConfiguration = SparkHadoopUtil.get.newConfiguration(sc.getConf)
-    hadoopConfiguration.set(XMLInputFormat.CONF_XML_START_TAG, XML_START_TAG)
-    hadoopConfiguration.set(XMLInputFormat.CONF_XML_END_TAG, XML_END_TAG)
+    hadoopConfiguration.set(XmlInputFormat.CONF_XML_START_TAG, XML_START_TAG)
+    hadoopConfiguration.set(XmlInputFormat.CONF_XML_END_TAG, XML_END_TAG)
     hadoopConfiguration.set("io.serializations",
       "org.apache.hadoop.io.serializer.JavaSerialization," +
         "org.apache.hadoop.io.serializer.WritableSerialization")
 
     sc.newAPIHadoopFile(
       wikiDumpPath,
-      ClassTag.apply(classOf[XMLInputFormat]).runtimeClass.asInstanceOf[Class[XMLInputFormat]],
+      ClassTag.apply(classOf[XmlInputFormat]).runtimeClass.asInstanceOf[Class[XmlInputFormat]],
       ClassTag.apply(classOf[LongWritable]).runtimeClass.asInstanceOf[Class[LongWritable]],
       ClassTag.apply(classOf[Text]).runtimeClass.asInstanceOf[Class[Text]],
       conf = hadoopConfiguration)

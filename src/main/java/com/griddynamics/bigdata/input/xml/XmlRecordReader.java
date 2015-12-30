@@ -16,9 +16,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * TODO
+ * Searches input for specified record boundary and stores captured record as byte array.
  */
-public class XMLRecordReader extends RecordReader<LongWritable, Text> {
+public class XmlRecordReader extends RecordReader<LongWritable, Text> {
 
     private long start;
     private long end;
@@ -28,7 +28,7 @@ public class XMLRecordReader extends RecordReader<LongWritable, Text> {
 
     private LongWritable currentKey = new LongWritable(0);
     private Text currentValue = new Text();
-    private XMLRecordParser parser;
+    private XmlRecordParser parser;
 
     @Override
     public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
@@ -40,9 +40,15 @@ public class XMLRecordReader extends RecordReader<LongWritable, Text> {
         Configuration conf = context.getConfiguration();
         InputStream input = getInputStream(path, conf);
 
-        String openingTag = conf.get(XMLInputFormat.CONF_XML_START_TAG);
-        String closingTag = conf.get(XMLInputFormat.CONF_XML_END_TAG);
-        parser = new XMLRecordParser(input, openingTag, closingTag);
+        String openingTag = conf.get(XmlInputFormat.CONF_XML_START_TAG);
+        String closingTag = conf.get(XmlInputFormat.CONF_XML_END_TAG);
+
+        if ((openingTag == null || openingTag.isEmpty()) ||
+                (closingTag == null || closingTag.isEmpty())) {
+            throw new IOException("you must provide the job's configuration with  " +
+                    "\"xml.start.tag\"/\"xml.end.tag\"  parameters!");
+        }
+        parser = new XmlRecordParser(input, openingTag, closingTag);
     }
 
     private InputStream getInputStream(Path path, Configuration conf) throws IOException {
