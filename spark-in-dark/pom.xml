@@ -38,6 +38,7 @@
         <dependency>
             <groupId>com.griddynamics.analytics.darknet</groupId>
             <artifactId>mapreduce-the-dark</artifactId>
+            <version>1.0</version>
         </dependency>
 
         <!-- Scala -->
