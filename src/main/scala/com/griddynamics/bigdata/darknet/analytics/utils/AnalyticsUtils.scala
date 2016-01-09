@@ -40,7 +40,6 @@ object AnalyticsUtils extends LazyLogging {
     normalizedAndScaled
   }
 
-  //TODO
   def saveDocsAsFeatureVectors(docs: RDD[String],
                                outputDir: String): Unit = {
     val featureVectors = featurizeDocuments(docs.map(doc => doc.split("\\s").toSeq))
@@ -73,7 +72,6 @@ object AnalyticsUtils extends LazyLogging {
     normalizedAndScaled
   }
 
-  //TODO refactor
   def featurizeDocumentsWithContext(docs: RDD[Seq[String]]): RDD[(Seq[String], Vector)] = {
     val tfWithContext: RDD[(Seq[String], Vector)] = docs.map(doc => (doc, new HashingTF().transform(doc)))
     val idf = new IDF().fit(tfWithContext.map { case (k, v) => v });
@@ -107,13 +105,6 @@ object AnalyticsUtils extends LazyLogging {
       .map(file => new JsoupExtractor().extractTextSafely(file._2))
 
     buildLabeledPointsOfClassForDocs(classificationGroup, docs.map(doc => doc.split("\\s")))
-  }
-
-  def saveSVMModel(sc: SparkContext,
-                   modelFeatures: RDD[LabeledPoint],
-                   numIterations: Int,
-                   modelOutputDir: String): Unit = {
-
   }
 
 }

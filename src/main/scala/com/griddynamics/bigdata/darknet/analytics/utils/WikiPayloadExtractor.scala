@@ -16,29 +16,30 @@ import scala.reflect.ClassTag
   * TODO
   */
 object WikiPayloadExtractor {
-  private val CATEGORY_PATTERN = """\[\[Category:(.{2,50}[^\|\*;:\)\(\[\]]+)\]\]""".r
+  private val CATEGORY_PATTERN = """\[\[Category:([A-Za-z\d\s]{3,60})\]\]""".r
   private val ARTICLE_CONTENT_PATTERN = """<text xml:space=\"preserve\">([\s\S]*?)<\/text>""".r
   private val ARTICLE_TITLE_PATTERN = """<title>(.*)<\\/title>""".r
   private val REDIRECT_PAGE = "#REDIRECT"
   private val START_DOC = "<text xml:space=\"preserve\">"
   private val END_DOC = "</text>"
+  private val TERM_PATTERN = """\b([A-Za-z]{3,})\b""".r
 
   private val XML_START_TAG = "<page>"
   private val XML_END_TAG = "</page>"
-  private val UNKNOWN_CATEGORY = "Unknown"
+  private val UNKNOWN_CATEGORY = "unknown"
 
   private val wikipediaTokenizer = new WikipediaAnalyzer()
 
   def loadTargetCategories(sc: SparkContext, targetCategoriesPath: String): RDD[String] = {
-    sc.textFile(targetCategoriesPath)
+    sc.textFile(targetCategoriesPath).map(s => s.toLowerCase)
 
   }
 
-  def loadWikiArticles(sc: SparkContext, wikiDumpPath: String): RDD[String] = {
+  def loadWikiDump(sc: SparkContext, wikiDumpPath: String): RDD[String] = {
 
     val hadoopConfiguration = SparkHadoopUtil.get.newConfiguration(sc.getConf)
-    hadoopConfiguration.set(XmlInputFormat.CONF_XML_START_TAG, XML_START_TAG)
-    hadoopConfiguration.set(XmlInputFormat.CONF_XML_END_TAG, XML_END_TAG)
+    hadoopConfiguration.set(XmlInputFormat.CONF_XML_NODE_START_TAG, XML_START_TAG)
+    hadoopConfiguration.set(XmlInputFormat.CONF_XML_NODE_END_TAG, XML_END_TAG)
     hadoopConfiguration.set("io.serializations",
       "org.apache.hadoop.io.serializer.JavaSerialization," +
         "org.apache.hadoop.io.serializer.WritableSerialization")
@@ -54,12 +55,21 @@ object WikiPayloadExtractor {
 
   def categorizeArticlesByTarget(sc: SparkContext,
                                  articles: RDD[String],
-                                 targetCategories: Map[String, Int]): RDD[(String, String)] = {
+                                 targetCategories: Map[String, Int],
+                                 exactMatch: Boolean = true): RDD[(String, String)] = {
     categorizeArticles(sc, articles)
-      .filter { case (k, v) =>
-        val appropriateCategory = targetCategories.get(k.toLowerCase()) //TODO case ignore compare/equals?
+      .filter { case (docCategory, v) =>
+        val matchingCategory = {
+          if (exactMatch) {
+            targetCategories.get(docCategory)
+          } else {
+            for {target <- targetCategories
+                 if docCategory.contains(target)
+            } yield docCategory
+          }
+        }
 
-        appropriateCategory match {
+        matchingCategory match {
           case Some(s) => true
           case None => false
         }
@@ -90,6 +100,13 @@ object WikiPayloadExtractor {
     article.contains(REDIRECT_PAGE)
   }
 
+  def findCategory(document: String): String = {
+    CATEGORY_PATTERN.findFirstMatchIn(document) match {
+      case Some(name) => name.group(1).toLowerCase()
+      case None => UNKNOWN_CATEGORY
+    }
+  }
+
   def tokenizeArticleContent(content: String): Seq[String] = {
     val tokens = ListBuffer.empty[String]
 
@@ -99,8 +116,15 @@ object WikiPayloadExtractor {
 
     tokenStream.reset()
     while (tokenStream.incrementToken()) {
-      tokens += (charTermAttribute.toString)
+      val term = charTermAttribute.toString
+
+      //ignore too short terms and digits
+      TERM_PATTERN.findFirstMatchIn(term) match {
+        case Some(t) => tokens += (term)
+        case None =>
+      }
     }
+
     tokenStream.end()
     tokenStream.close()
 
@@ -120,13 +144,6 @@ object WikiPayloadExtractor {
     val c = findCategory(article)
     val cc = categories.find(s => s.eq(c))
     cc.getOrElse(UNKNOWN_CATEGORY)
-  }
-
-  def findCategory(document: String): String = {
-    CATEGORY_PATTERN.findFirstMatchIn(document) match {
-      case Some(name) => name.group(1)
-      case None => UNKNOWN_CATEGORY
-    }
   }
 
   def extractCategories(sc: SparkContext, documents: RDD[String]): RDD[String] = {

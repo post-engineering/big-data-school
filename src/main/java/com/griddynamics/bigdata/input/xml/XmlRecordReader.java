@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Searches input for specified record boundary and stores captured record as byte array.
+ * The {@link RecordReader} implementation can be applied for reading content of particular XML-node.
  */
 public class XmlRecordReader extends RecordReader<LongWritable, Text> {
 
@@ -40,13 +40,17 @@ public class XmlRecordReader extends RecordReader<LongWritable, Text> {
         Configuration conf = context.getConfiguration();
         InputStream input = getInputStream(path, conf);
 
-        String openingTag = conf.get(XmlInputFormat.CONF_XML_START_TAG);
-        String closingTag = conf.get(XmlInputFormat.CONF_XML_END_TAG);
+        String openingTag = conf.get(XmlInputFormat.CONF_XML_NODE_START_TAG);
+        String closingTag = conf.get(XmlInputFormat.CONF_XML_NODE_END_TAG);
 
         if ((openingTag == null || openingTag.isEmpty()) ||
                 (closingTag == null || closingTag.isEmpty())) {
-            throw new IOException("you must provide the job's configuration with  " +
-                    "\"xml.start.tag\"/\"xml.end.tag\"  parameters!");
+            throw new IOException(
+                    String.format("You must provide the job's configuration with \"%s\" / \"%s\" parameters!",
+                            XmlInputFormat.CONF_XML_NODE_START_TAG,
+                            XmlInputFormat.CONF_XML_NODE_END_TAG
+                    )
+            );
         }
         parser = new XmlRecordParser(input, openingTag, closingTag);
     }

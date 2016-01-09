@@ -9,12 +9,21 @@ import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 
 /**
-  * TODO
+  * The {@link SparkJob} job implementation featurizes Wiki articles from raw dump data.
   */
-object FeaturizeWikiArticlesJob extends SparkJob with LazyLogging {
+object FeaturizeWikiArticlesFromDumpJob extends SparkJob with LazyLogging {
 
-
-  override def execute(sc: SparkContext, args: List[String]): Int = {
+  /**
+    * Executes the job
+    * @param sc predefined Spark context
+    * @param args required job arguments:
+    *             #1: path to Wiki dump
+    *             #2: path to target categories
+    *             #3: path to result output directory
+    *
+    * @return status of job completion: '1' / '0' - success / failure
+    */
+  override def execute(sc: SparkContext, args: String*): Int = {
     val wikiDumpPath = args(0)
     val targetCategoriesPath = args(1)
     val outputDirPath = args(2)
@@ -26,9 +35,14 @@ object FeaturizeWikiArticlesJob extends SparkJob with LazyLogging {
       .zipWithIndex
       .toMap[String, Int]
 
-    val wikiArticles: RDD[String] = WikiPayloadExtractor.loadWikiArticles(sc, wikiDumpPath)
+    val wikiArticles: RDD[String] = WikiPayloadExtractor.loadWikiDump(sc, wikiDumpPath)
 
-    val categorizedWikiArticles: RDD[(String, String)] = WikiPayloadExtractor.categorizeArticlesByTarget(sc, wikiArticles, categoriesIndex)
+    val categorizedWikiArticles: RDD[(String, String)] = WikiPayloadExtractor.categorizeArticlesByTarget(
+      sc,
+      wikiArticles,
+      categoriesIndex,
+      false
+    )
 
     val matchingCategories = categorizedWikiArticles.map { case (k, v) => k }
       .distinct

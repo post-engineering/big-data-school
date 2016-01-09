@@ -42,8 +42,8 @@ public class PdmlPacketsToWordsJob extends CustomizableJob {
     @Override
     public Configuration getCustomConfiguration() {
         Configuration conf = new Configuration();
-        conf.set(XmlInputFormat.CONF_XML_START_TAG, XML_START_TAG);
-        conf.set(XmlInputFormat.CONF_XML_END_TAG, XML_END_TAG);
+        conf.set(XmlInputFormat.CONF_XML_NODE_START_TAG, XML_START_TAG);
+        conf.set(XmlInputFormat.CONF_XML_NODE_END_TAG, XML_END_TAG);
         return conf;
     }
 }

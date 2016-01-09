@@ -19,12 +19,16 @@ abstract class SparkJob {
 
       jarsOpt match {
         case Some(ops) => conf.setJars(List(ops))
-        case None => conf.setMaster("local[4]")
+        case None => {
+          conf.setMaster("local[5]")
+            .set("spark.executor.memory", "2g")
+            .set("spark.driver.memory", "2g")
+        }
       }
       new SparkContext(conf)
     }
 
-    execute(sc, args.toList)
+    execute(sc, args: _*)
 
   }
 
@@ -34,5 +38,5 @@ abstract class SparkJob {
     * @param args job arguments
     * @return status of job completion: '1' / '0' - success / failure
     */
-  def execute(sc: SparkContext, args: List[String]): Int
+  def execute(sc: SparkContext, args: String*): Int
 }

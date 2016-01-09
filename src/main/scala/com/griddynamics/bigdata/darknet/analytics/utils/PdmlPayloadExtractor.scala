@@ -19,11 +19,6 @@ object PdmlPayloadExtractor extends LazyLogging {
   private val XML_START_TAG = "<packet>"
   private val XML_END_TAG = "</packet>"
 
-  def extractAndSaveDocumentsContent(sc: SparkContext, input: String, output: String): Unit = {
-    val data = extractHtmlPayloadFromPDML(sc, input)
-    data.saveAsTextFile(output);
-  }
-
   def extractAndSaveAsFeatureVectors(sc: SparkContext, input: String, output: String): Unit = {
     val docs = extractHtmlPayloadFromPDML(sc, input)
     AnalyticsUtils.saveDocsAsFeatureVectors(docs, output)
@@ -39,8 +34,8 @@ object PdmlPayloadExtractor extends LazyLogging {
   def extractHtmlFromPDML(sc: SparkContext, input: String): RDD[String] = {
 
     val hadoopConfiguration = SparkHadoopUtil.get.newConfiguration(sc.getConf)
-    hadoopConfiguration.set(XmlInputFormat.CONF_XML_START_TAG, XML_START_TAG)
-    hadoopConfiguration.set(XmlInputFormat.CONF_XML_END_TAG, XML_END_TAG)
+    hadoopConfiguration.set(XmlInputFormat.CONF_XML_NODE_START_TAG, XML_START_TAG)
+    hadoopConfiguration.set(XmlInputFormat.CONF_XML_NODE_END_TAG, XML_END_TAG)
     hadoopConfiguration.set("io.serializations",
       "org.apache.hadoop.io.serializer.JavaSerialization," +
         "org.apache.hadoop.io.serializer.WritableSerialization")

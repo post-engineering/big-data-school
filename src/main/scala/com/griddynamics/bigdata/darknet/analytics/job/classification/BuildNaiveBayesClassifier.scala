@@ -7,17 +7,20 @@ import org.apache.spark.mllib.classification.NaiveBayes
 import org.apache.spark.mllib.util.MLUtils
 
 /**
-  * TODO
+  * The {@link SparkJob} job implementation builds Naive Bayes classifier.
   */
 object BuildNaiveBayesClassifier extends SparkJob with LazyLogging {
 
   /**
-    * Executes job specific logic
+    * Executes the job
     * @param sc predefined Spark context
-    * @param args job arguments
+    * @param args required job arguments:
+    *             #1: path to labeled points
+    *             #2: path to result model
+    *
     * @return status of job completion: '1' / '0' - success / failure
     */
-  override def execute(sc: SparkContext, args: List[String]): Int = {
+  override def execute(sc: SparkContext, args: String*): Int = {
     val lpsPath = args(0)
     val outputModelDirPath = args(1)
 
@@ -40,7 +43,6 @@ object BuildNaiveBayesClassifier extends SparkJob with LazyLogging {
     val accuracy = hitCount / (predictedCount / 100)
     logger.info(s"predicted: $predictedCount \nhit: $hitCount \naccuracy: $accuracy")
 
-    //TODO map vectors to docs
     1
   }
 }

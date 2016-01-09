@@ -14,7 +14,7 @@ import java.io.InputStream;
 public class XmlRecordParser implements Closeable {
 
     private static final Logger LOG = LoggerFactory.getLogger(XmlRecordParser.class);
-    private static final int MAX_RECORD_LENGTH = 1024 * 1024 * 10; // 10 Mb
+    private static final int MAX_RECORD_LENGTH = 1024 * 1024 * 5; // 5 Mb
     private final byte[] RECORD_START;
     private final byte[] RECORD_END;
     private final InputStream input;
