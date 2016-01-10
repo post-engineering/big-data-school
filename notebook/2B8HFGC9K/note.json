@@ -1,0 +1,158 @@
+{
+  "paragraphs": [
+    {
+      "text": "  /*.filter{w \u003d\u003e \n                 \"\"\"\\b\\w{3,30}\\b\"\"\".r.findFirstMatchIn(w) match{\n                     case Some(word) \u003d\u003e true\n                     case None \u003d\u003e false\n                 } \n                } */\n\nval capturedRequests \u003d sc.wholeTextFiles(\"file:///home/ipertushin/IdeaProjects/porno-cluster/pdml-html-text-tokenized\").map{case(k,v) \u003d\u003e v}\nval wordsCounts \u003d capturedRequests\n                .flatMap{r \u003d\u003e r.split(\"\\\\,\").toSeq}\n                .map(w \u003d\u003e (w.trim,1))\n                .reduceByKey{case(v1,v2) \u003d\u003e v1 + v2}\n                \ncase class WordCount(word: String, count: Int)\n\nval df \u003d wordsCounts.map{case(k,v) \u003d\u003e WordCount(k,v)}.toDF\ndf.registerTempTable(\"WordCountTable\")\n\nval result \u003d df.collect\n                \n",
+      "dateUpdated": "Jan 4, 2016 10:40:06 PM",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1451929256208_-1193892965",
+      "id": "20160104-204056_1365361490",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TEXT",
+        "msg": "capturedRequests: org.apache.spark.rdd.RDD[String] \u003d MapPartitionsRDD[155] at map at \u003cconsole\u003e:37\nwordsCounts: org.apache.spark.rdd.RDD[(String, Int)] \u003d ShuffledRDD[158] at reduceByKey at \u003cconsole\u003e:43\ndefined class WordCount\ndf: org.apache.spark.sql.DataFrame \u003d [word: string, count: int]\nresult: Array[org.apache.spark.sql.Row] \u003d \nArray([bérãmâñ,2], [региональной,2], [h4vnnna2s0jzypdhc/sg4udmppkd,1], [sbiubifnbqfdt3da8bakyjecwjxbnqta644xxyrms6bbw76yunmqpclrmjn5x1am,1], [bone,3], [anal.adultnet.in,4], [y8uc6kbugbpwxa,3], [exp.y.get,1], [авантюрой,1], [torik1949,1], [attesa.jsp.)\nList(esito,1], [a.tolerance,1], [6hsac7,1], [kى,1], [dám,2], [hem,2], [okien,1], [харламова,2], [b.jsonp,4], [ceneopunkt,1], [garnki,1], [2.125em,6], [kdvzounbrhfhob0yo0ser1ly4d,1], [vkn6fvfa6gss8i47qld,1], [evt.which,2], [husky,2], [fotografiju,1], [k.leadingwhitespace,6], [asuda,1], [r.ost,2], [25.584224756083227,1], [h.call,4], [workarea,3], [6j,2], [kisa,2], [editor.wmdbase,1], [statuses.json,1], [date.prototype.addweeks,1], [hs.addeventlistener,2], [ph3n8h6xrzvklpi6jkezvyvoowfskwgjr0ysnuqgi4d..."
+      },
+      "dateCreated": "Jan 4, 2016 8:40:56 PM",
+      "dateStarted": "Jan 4, 2016 10:40:06 PM",
+      "dateFinished": "Jan 4, 2016 10:40:09 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%sql\n\nselect * from WordCountTable \nwhere word like \u0027%shop%\u0027\nOrder by count DESC \n",
+      "dateUpdated": "Jan 5, 2016 7:31:25 PM",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "pieChart",
+          "height": 304.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "word",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "count",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "xAxis": {
+              "name": "word",
+              "index": 0.0,
+              "aggr": "sum"
+            },
+            "yAxis": {
+              "name": "count",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          }
+        },
+        "editorMode": "ace/mode/sql"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1451929497232_-1146063152",
+      "id": "20160104-204457_884771924",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "word\tcount\nshop\t275\nshopping\t81\nshopbop\t56\nshops\t44\nshoppers\t21\nworkshop\t6\nshopper\t4\nworkshops\t3\nnoveltyshop\t2\nphotoshop\t2\nwebshop\t2\nshopsearch\t1\namashopper\t1\nwebhobbyshop\t1\ntrafficshop.com\t1\nshopkin\t1\nshopify\t1\nshoplifting\t1\nmythemeshop\t1\nshoper.pl)\nList(302\t1\nshop8\t1\nq0ad8aywcmanwnskbokq7utwh10gjl7qwnm08tzxokf0du/yoe7xhoj1shopwxwdoavadya0i4hjxbqly\t1\nurthshop\t1\nshoper.pl\t1\nshopkins\t1\n"
+      },
+      "dateCreated": "Jan 4, 2016 8:44:57 PM",
+      "dateStarted": "Jan 4, 2016 11:40:07 PM",
+      "dateFinished": "Jan 4, 2016 11:40:07 PM",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%helium \nrun",
+      "dateUpdated": "Jan 5, 2016 7:33:10 PM",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1451932329912_-896898060",
+      "id": "20160104-213209_1196822534",
+      "result": {
+        "code": "ERROR",
+        "type": "TEXT",
+        "msg": "helium interpreter not found"
+      },
+      "dateCreated": "Jan 4, 2016 9:32:09 PM",
+      "dateStarted": "Jan 4, 2016 10:58:57 PM",
+      "dateFinished": "Jan 4, 2016 10:58:57 PM",
+      "status": "ERROR",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "config": {},
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1451937082767_1732554942",
+      "id": "20160104-225122_2114132961",
+      "dateCreated": "Jan 4, 2016 10:51:22 PM",
+      "status": "READY",
+      "progressUpdateIntervalMs": 500
+    }
+  ],
+  "name": "PDML data word count",
+  "id": "2B8HFGC9K",
+  "angularObjects": {
+    "2B8Q5DKVN": [],
+    "2B9F4CYEV": [],
+    "2B8ANTDJE": [],
+    "2BANFBEE3": [],
+    "2B8JV8TSR": [],
+    "2BA19XE3N": [],
+    "2B7J3UZ21": [],
+    "2B7BUEC27": [],
+    "2BASHQUN5": [],
+    "2B9APXTDK": [],
+    "2B9UZ3UNS": [],
+    "2B9RHQ3M7": [],
+    "2BA5HWF62": []
+  },
+  "config": {},
+  "info": {}
+}
