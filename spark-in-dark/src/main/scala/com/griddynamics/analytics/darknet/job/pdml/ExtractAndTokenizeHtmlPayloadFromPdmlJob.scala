@@ -25,7 +25,7 @@ object ExtractAndTokenizeHtmlPayloadFromPdmlJob extends SparkJob with LazyLoggin
 
     PdmlPayloadExtractor.extractDocumentsFromRawData(sc, input)
       .map(doc => WikiPayloadExtractor.tokenizeArticleContent(doc)) //FIXME  implement specific tokenizer
-      .saveAsTextFile(output)
+      .saveAsObjectFile(output)
 
     1
   }
