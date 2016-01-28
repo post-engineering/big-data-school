@@ -23,9 +23,13 @@ object ExtractAndTokenizeHtmlPayloadFromPdmlJob extends SparkJob with LazyLoggin
     val input = args(0)
     val output = args(1)
 
-    PdmlPayloadExtractor.extractDocumentsFromRawData(sc, input)
-      .map(doc => WikiPayloadExtractor.tokenizeArticleContent(doc)) //FIXME  implement specific tokenizer
-      .saveAsObjectFile(output)
+    PdmlPayloadExtractor.extractPayloadFromRawData(sc, input)
+      .map(doc => WikiPayloadExtractor
+        .tokenizeArticleContent(doc)
+        .filter { t => t.length > 1 } //TODO filter numbers and special charecters out?
+        .mkString(", ")
+      ) //FIXME  implement  tokenizer specific to PDML-HTML payload
+      .saveAsTextFile(output)
 
     1
   }
