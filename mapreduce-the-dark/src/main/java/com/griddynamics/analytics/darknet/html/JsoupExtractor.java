@@ -14,27 +14,23 @@ public class JsoupExtractor implements HtmlExtractor {
 
     private String htmlPayload = null;
 
-    private final static Whitelist WL = new Whitelist()
+    public final static Whitelist WL_RELAXED = new Whitelist()
             .addTags(
-                "a", "b", "blockquote", "br", "caption", "cite",
-                "h1", "h2", "h3", "h4", "h5", "h6",
-                "i", "li", "ol", "p", "pre", "q", "small", "span", "strike", "strong",
-                "sub", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "u",
-                "ul")
+                    "a", "b", "blockquote", "br", "caption", "cite",
+                    "h1", "h2", "h3", "h4", "h5", "h6",
+                    "i", "li", "ol", "p", "pre", "q", "small", "span", "strike", "strong",
+                    "sub", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "u",
+                    "ul")
 
-                .addAttributes("a", "href", "title")
-                .addAttributes("blockquote", "cite")
-                .addAttributes("col", "span")
-                .addAttributes("colgroup", "span")
-                .addAttributes("ol", "start", "type")
-                .addAttributes("q", "cite")
-                .addAttributes("table", "summary")
-                .addProtocols("a", "href", "ftp", "http", "https", "mailto")
-                .addProtocols("blockquote", "cite", "http", "https")
-                .addProtocols("cite", "cite", "http", "https")
-                .addProtocols("http", "https")
-                .addProtocols("q", "cite", "http", "https");
+            .addAttributes("a", "href")
+            .addProtocols("http", "https")
+            .addProtocols("q", "cite", "http", "https");
 
+    public static final Whitelist WL_STRONG = new Whitelist()
+            .addTags("h1", "h2", "h3", "h4", "h5", "h6", "title",
+                    "b", "em", "i", "strong", "u")
+            .addAttributes("a")
+            .addProtocols("http", "https");
 
     public JsoupExtractor parseHtml(String pathToFile) throws IOException {
         htmlPayload = getHtml(pathToFile);
@@ -59,7 +55,12 @@ public class JsoupExtractor implements HtmlExtractor {
 
     @Override
     public String cleanUpStructure(String html) {
-        return Jsoup.clean(html, WL);
+        return cleanUpStructure(html, WL_STRONG);
+    }
+
+    @Override
+    public String cleanUpStructure(String html, Whitelist wl) {
+        return Jsoup.clean(html, wl);
     }
 
     @Override

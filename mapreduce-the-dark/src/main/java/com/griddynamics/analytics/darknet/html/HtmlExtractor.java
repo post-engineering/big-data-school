@@ -1,5 +1,6 @@
 package com.griddynamics.analytics.darknet.html;
 
+import org.jsoup.safety.Whitelist;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -34,6 +35,14 @@ public interface HtmlExtractor {
      * @return well-formed html document
      */
     String cleanUpStructure(String html);
+
+    /**
+     * Cleans the specified HTML up by using specific {@link Whitelist} implementation.
+     * @param html html structure to cleanup
+     * @param wl filtering requirements holder
+     * @return
+     */
+    String cleanUpStructure(String html, Whitelist wl);
 
 
     /**
