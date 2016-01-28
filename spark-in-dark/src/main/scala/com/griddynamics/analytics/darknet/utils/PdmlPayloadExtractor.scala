@@ -19,7 +19,7 @@ object PdmlPayloadExtractor extends PayloadExtractor with LazyLogging {
   private val XML_START_TAG = "<packet>"
   private val XML_END_TAG = "</packet>"
 
-  override def extractDocumentsFromRawData(sc: SparkContext, input: String): RDD[String] = {
+  override def extractPayloadFromRawData(sc: SparkContext, input: String): RDD[String] = {
     val packets = extractPacketFromPDML(sc, input)
     val htmlPayload = packets
       .filter(packet => packet != null && !packet.isEmpty)

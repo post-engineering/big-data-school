@@ -23,20 +23,24 @@ object MapWikiCategoriesToArticlesJob extends SparkJob with LazyLogging {
   override def execute(sc: SparkContext, args: String*): Int = {
     val wikiDumpPath = args(0)
     val resultMappingPath = args(1)
-    val wikiDump: RDD[String] = WikiPayloadExtractor.extractDocumentsFromRawData(sc, wikiDumpPath)
+    val wikiDump: RDD[String] = WikiPayloadExtractor.extractPayloadFromRawData(sc, wikiDumpPath)
 
     val categoryToArticleMapping = wikiDump
+      .repartition(1000)
       .filter(page => !WikiPayloadExtractor.isRedirect(page))
       .map { page =>
         val category = WikiPayloadExtractor.findCategory(page)
-        val articleTokens = WikiPayloadExtractor.tokenizeArticleContent(page).distinct
-        (category, articleTokens)
+        val articleTokens = WikiPayloadExtractor
+          .tokenizeArticleContent(page)
+          .mkString(", ")
+        (category, "["  + articleTokens  + "]")
       }
       .filter { case (k, v) => !WikiPayloadExtractor.isUnknownCategory(k) }
 
+
     logger.info(s"Number of articles mapped to a category: ${categoryToArticleMapping.count()}")
 
-    categoryToArticleMapping.saveAsObjectFile(resultMappingPath)
+    categoryToArticleMapping.saveAsTextFile(resultMappingPath)
     logger.info(s"The mapping has been exported to: $resultMappingPath")
     1
   }

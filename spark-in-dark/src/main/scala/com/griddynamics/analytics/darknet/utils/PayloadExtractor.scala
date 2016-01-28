@@ -16,8 +16,8 @@ abstract class PayloadExtractor extends LazyLogging {
     * @param input path to raw data
     * @return rdd of feature-vectors
     */
-  def extractDocumentsAndFeaturize(sc: SparkContext, input: String): RDD[Vector] = {
-    val docs = extractDocumentsFromRawData(sc, input)
+  def extractPayloadAndFeaturize(sc: SparkContext, input: String): RDD[Vector] = {
+    val docs = extractPayloadFromRawData(sc, input)
     val tokenizedDocs = AnalyticsUtils.tokenizeDocuments(docs)
     val features = AnalyticsUtils.featurizeDocuments(tokenizedDocs)
 
@@ -31,5 +31,5 @@ abstract class PayloadExtractor extends LazyLogging {
     * @param input path to raw data
     * @return rdd of extracted documents
     */
-  def extractDocumentsFromRawData(sc: SparkContext, input: String): RDD[String]
+  def extractPayloadFromRawData(sc: SparkContext, input: String): RDD[String]
 }

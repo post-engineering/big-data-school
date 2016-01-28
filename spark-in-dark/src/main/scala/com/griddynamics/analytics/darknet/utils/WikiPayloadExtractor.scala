@@ -37,7 +37,7 @@ object WikiPayloadExtractor extends PayloadExtractor with LazyLogging {
 
   }
 
-  override def extractDocumentsFromRawData(sc: SparkContext, input: String): RDD[String] = {
+  override def extractPayloadFromRawData(sc: SparkContext, input: String): RDD[String] = {
 
     val hadoopConfiguration = SparkHadoopUtil.get.newConfiguration(sc.getConf)
     hadoopConfiguration.set(XmlInputFormat.CONF_XML_NODE_START_TAG, XML_START_TAG)
