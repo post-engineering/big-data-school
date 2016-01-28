@@ -23,7 +23,7 @@ object ExtractWikiCategoriesJob extends SparkJob with LazyLogging {
     val wikiDumpPath = args(0)
     val extractedCategoriesPath = args(1)
 
-    val wikiDump = WikiPayloadExtractor.extractDocumentsFromRawData(sc, wikiDumpPath)
+    val wikiDump = WikiPayloadExtractor.extractPayloadFromRawData(sc, wikiDumpPath)
     val categories = WikiPayloadExtractor.extractCategories(sc, wikiDump)
 
     logger.info(s"Number of categories: ${categories.count()}") //on extract - 15/12/27 15:50:05 INFO ExtractWikiCategories$: Number of categories: 21948

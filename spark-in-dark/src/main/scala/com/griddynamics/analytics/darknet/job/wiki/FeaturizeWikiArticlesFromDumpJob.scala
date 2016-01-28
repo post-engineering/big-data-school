@@ -35,7 +35,7 @@ object FeaturizeWikiArticlesFromDumpJob extends SparkJob with LazyLogging {
       .zipWithIndex
       .toMap[String, Int]
 
-    val wikiArticles: RDD[String] = WikiPayloadExtractor.extractDocumentsFromRawData(sc, wikiDumpPath)
+    val wikiArticles: RDD[String] = WikiPayloadExtractor.extractPayloadFromRawData(sc, wikiDumpPath)
 
     val categorizedWikiArticles: RDD[(String, String)] = WikiPayloadExtractor.categorizeArticlesByTarget(
       sc,
