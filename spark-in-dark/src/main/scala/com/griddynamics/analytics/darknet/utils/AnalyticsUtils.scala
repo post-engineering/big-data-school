@@ -1,17 +1,41 @@
 package com.griddynamics.analytics.darknet.utils
 
+import java.awt.Color
+
+import com.optimaize.langdetect.LanguageDetectorBuilder
+import com.optimaize.langdetect.ngram.NgramExtractors
+import com.optimaize.langdetect.profiles.LanguageProfileReader
+import com.optimaize.langdetect.text.CommonTextObjectFactories
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.mllib.feature
 import org.apache.spark.mllib.feature.{HashingTF, IDF, Normalizer}
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
+import wordcloud.bg.{Background, CircleBackground}
+import wordcloud.font.scale.{FontScalar, SqrtFontScalar}
+import wordcloud.nlp.FrequencyAnalyzer
+import wordcloud.palette.ColorPalette
+import wordcloud.{CollisionMode, WordCloud, WordFrequency}
+
+import scala.collection.JavaConverters._
 
 /**
   * The utility class aggregates cross-cutting functions
   * that can be used for design of analytical jobs
   */
 object AnalyticsUtils extends LazyLogging {
+
+  //load all languages:
+  val languageProfiles = new LanguageProfileReader().readAll();
+
+  //build language detector:
+  val languageDetector = LanguageDetectorBuilder.create(NgramExtractors.standard())
+    .withProfiles(languageProfiles)
+    .build();
+
+  //create a text object factory
+  val textObjectFactory = CommonTextObjectFactories.forDetectingOnLargeText();
 
   /**
     * Featurizes categorized documents.
@@ -111,6 +135,77 @@ object AnalyticsUtils extends LazyLogging {
     val normalizedAndScaled = normalized.map { case (k, v) => (k, scaleModel.transform(v)) }
 
     normalizedAndScaled
+  }
+
+  /**
+    * TODO
+    * @param text
+    * @return
+    */
+  def detectLanguage(text: String): String = {
+    //query:
+    val textObject = textObjectFactory.forText(text);
+    val lang = languageDetector.detect(textObject);
+    lang.or("unknown")
+  }
+
+  /**
+    * TODO
+    * @param wc
+    * @param output
+    */
+  def visualizeWordCloud(wc: RDD[(String, Int)], output: String): Unit = {
+
+    visualizeWordCloud(wc,
+      new CircleBackground(500),
+      new ColorPalette(new Color(0x4055F1),
+        new Color(0x408DF1),
+        new Color(0x40AAF1),
+        new Color(0x40C5F1),
+        new Color(0x40D3F1),
+        new Color(0xFFFFFF)),
+      new SqrtFontScalar(10, 40),
+      output
+    )
+
+
+  }
+
+  /**
+    * TODO
+    * @param wc
+    * @param bkgrd
+    * @param colorPalette
+    * @param fontScalar
+    * @param output
+    * @param topN
+    */
+  def visualizeWordCloud(wc: RDD[(String, Int)],
+                         bkgrd: Background,
+                         colorPalette: ColorPalette,
+                         fontScalar: FontScalar,
+                         output: String,
+                         topN: Int = 700): Unit = {
+
+    val wcList: List[WordFrequency] = wc.collect()
+      .toSeq
+      .map { case (k, v) => new WordFrequency(k, v) }
+      .toList
+
+    val frequencyAnalyzer = new FrequencyAnalyzer()
+    frequencyAnalyzer.setWordFrequencesToReturn(topN)
+    frequencyAnalyzer.setMinWordLength(4)
+
+    val wordFrequencies = frequencyAnalyzer.loadWordFrequencies(wcList.asJava)
+    val wordCloud = new WordCloud(1000, 1000, CollisionMode.PIXEL_PERFECT)
+    wordCloud.setPadding(2)
+
+    wordCloud.setBackground(bkgrd)
+    wordCloud.setColorPalette(colorPalette)
+    wordCloud.setFontScalar(fontScalar)
+
+    wordCloud.build(wordFrequencies)
+    wordCloud.writeToFile(output)
   }
 
 }
