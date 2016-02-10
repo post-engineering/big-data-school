@@ -21,10 +21,7 @@ object PdmlPayloadExtractor extends PayloadExtractor with LazyLogging {
 
   override def extractPayloadFromRawData(sc: SparkContext, input: String): RDD[String] = {
     val packets = extractPacketFromPDML(sc, input)
-    val htmlPayload = packets
-      .filter(packet => packet != null && !packet.isEmpty)
-      .map(packet => new JsoupExtractor().extractTextSafely(packet))
-
+    val htmlPayload = packets.map(packet =>  new JsoupExtractor().extractTextSafely(packet))
     htmlPayload
   }
 
@@ -46,6 +43,7 @@ object PdmlPayloadExtractor extends PayloadExtractor with LazyLogging {
       .map { case (pdmlPacket) =>
         new PdmlUtil().extractHTMLPayloadFromPacket(pdmlPacket._2.getBytes, 0, pdmlPacket._2.getLength)
       }
+    .filter(packet => packet != null && !packet.isEmpty)
 
     logger.debug(s"Total number of extracted packets from $input is: ${packets.count()}")
     packets
