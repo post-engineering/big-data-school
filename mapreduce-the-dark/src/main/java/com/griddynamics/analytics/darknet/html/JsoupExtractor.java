@@ -29,7 +29,6 @@ public class JsoupExtractor implements HtmlExtractor {
     public static final Whitelist WL_STRONG = new Whitelist()
             .addTags("h1", "h2", "h3", "h4", "h5", "h6", "title",
                     "b", "em", "i", "strong", "u")
-            .addAttributes("a")
             .addProtocols("http", "https");
 
     public JsoupExtractor parseHtml(String pathToFile) throws IOException {

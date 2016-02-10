@@ -1,7 +1,5 @@
 package com.griddynamics.analytics.darknet.util;
 
-import com.griddynamics.analytics.darknet.html.HtmlExtractor;
-import com.griddynamics.analytics.darknet.html.JsoupExtractor;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -21,19 +19,15 @@ import java.nio.charset.StandardCharsets;
  */
 public class PdmlUtil {
 
-    private final static String HTML_XPATH_QUERY = "//proto[@name='data-text-lines']/field/@value";
-    private final static Integer MIN_WORD_LENGTH = 3;
+    private final static String HTML_XPATH_QUERY = "//proto[@name='data-text-lines' and @showname='Line-based text data: text/html']/field[not(contains(@show,'text/javascript')) and not(contains(@show,'text/css'))]/@value";
     protected XPath xPath;
     protected DocumentBuilder builder;
-    private HtmlExtractor extractor;
     private XPathExpression expression;
 
     public PdmlUtil() throws IOException {
         try {
             xPath = XPathFactory.newInstance().newXPath();
             builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-
-            extractor = new JsoupExtractor();
             expression = xPath.compile(HTML_XPATH_QUERY);
         } catch (ParserConfigurationException | XPathExpressionException e) {
             throw new IOException("Error creating XML document builder", e);
