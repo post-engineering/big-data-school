@@ -11,6 +11,7 @@
     <modules>
         <module>mapreduce-the-dark</module>
         <module>spark-in-dark</module>
+        <module>deep-detector</module>
     </modules>
 
     <properties>
@@ -126,6 +127,11 @@
             <dependency>
                 <groupId>org.apache.spark</groupId>
                 <artifactId>spark-mllib_2.10</artifactId>
+                <version>${spark.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.spark</groupId>
+                <artifactId>spark-tools_2.10</artifactId>
                 <version>${spark.version}</version>
             </dependency>
 
