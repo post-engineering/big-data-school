@@ -27,7 +27,7 @@ import scala.reflect.io.File
 /**
   * TODO
   */
-class AnomalyDetectionNet extends SparkJob with LazyLogging {
+class AnomalyDetectionNN extends SparkJob with LazyLogging {
 
   /**
     * Executes job specific logic
@@ -36,25 +36,19 @@ class AnomalyDetectionNet extends SparkJob with LazyLogging {
     * @return status of job completion: '1' / '0' - success / failure
     */
   override def execute(sc: SparkContext, args: String*): Int = {
-
     val miniBatchSize = 20
     val numIterations = 5
     val nSamplesToGenerate = 4
     val nTsStepsToSample = 20
     val generationInitialization = null
-
-    // Above is Used to 'prime' the LSTM with a character sequence to continue/complete.
-    // Initialization characters must all be in CharacterIterator.getMinimalCharacterSet() by default
     val rng = new Random(12345)
 
     val nCores = 6
     val sparkExamplesPerFit: Int = 20 * nCores
     val tsVectorSize = 10 * 10
 
-
     val net = setupNetwork(sc, tsVectorSize, tsVectorSize)
     val sparkNetwork: SparkDl4jMultiLayer = new SparkDl4jMultiLayer(sc, net)
-
 
     //Length of each sequence (used in truncated BPTT)
     val timeSeriesIntervalLength = 20
