@@ -128,7 +128,7 @@ class TSDBClientConcurrent(server: String, port: String) extends Thread with Laz
         override def run(): Unit = {
           val ps = new PrintWriter(openTsdbServerSessionOs.getOutputStream)
           predictionsToPublish.foreach { case ((ts, m)) =>
-            val putRequest = s"${predictionMetricPrefix}.${activeQuery.getMetric()} ${ts} ${m} [{\"host\":\"pornocluster\"}]"
+            val putRequest = s"${predictionMetricPrefix}.${activeQuery.getMetric()} ${ts} ${m}  [{'host':'pornocluster'}]"
             ps.write(s"put ${putRequest}")
             logger.info(s"Predicted metric has been published: (${ts} : ${m})")
           }

@@ -134,7 +134,7 @@ class TSDBClient(server: String, port: String) extends Thread with LazyLogging {
         val ps = new PrintWriter(openTsdbServerSessionOs.getOutputStream)
         var lastTsPoint: Long = fromTimeStamp
         predictionsToPublish.foreach { p =>
-          val putRequest = s"${predictionMetricPrefix}.${activeQuery.getMetric()} ${lastTsPoint} ${p} [{\"host\":\"pornocluster\"}]"
+          val putRequest = s"${predictionMetricPrefix}.${activeQuery.getMetric()} ${lastTsPoint} ${p} [{'host':'pornocluster'}]"
           ps.write(s"put ${putRequest}")
           logger.info(s"Predicted metric has been published: ${putRequest}")
           lastTsPoint += timeStepInterval
