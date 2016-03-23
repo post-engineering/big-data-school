@@ -2,6 +2,7 @@ package com.griddynamics.deepdetector.opentsdb.client
 
 import java.io._
 import java.net.{HttpURLConnection, Socket, SocketTimeoutException, URL}
+import java.util.concurrent.{Executors, LinkedTransferQueue, TimeUnit}
 
 import com.griddynamics.deepdetector.etl.ExtractTimeSeriesJob
 import com.griddynamics.deepdetector.lstmnet.AnomalyDetectionNN
@@ -9,12 +10,67 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.{SparkConf, SparkContext}
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer
 
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 /**
   * TODO
   */
-class TSDBClient(server: String, port: String) extends Thread with LazyLogging {
+class TSDBClientConcurrent(server: String, port: String) extends Thread with LazyLogging {
+
+
+  val cachingExecutor = Executors.newCachedThreadPool()
+
+  val transferQueue = new LinkedTransferQueue[Seq[(Long, Double)]]
+
+  val tsStreamingWorker = new Runnable {
+
+    def doesFitInterval(timeline: Seq[(Long, Double)], expectedInterval: Long): Boolean = {
+      if (timeline.size == 0)
+        return false
+
+      val acquiredInterval = timeline.last._1 - timeline.head._1
+      !(acquiredInterval < expectedInterval)
+    }
+
+    override def run(): Unit = {
+      val timeline = ListBuffer[(Long, Double)]()
+
+      while (true) {
+
+        //acquire interval of time Steps
+        while (!doesFitInterval(timeline, activeQuery.getIntervalInMS())) {
+          logger.info(s"worker executes: ${activeQuery}")
+          val rawTimetine = executeQuery(activeQuery)
+          logger.info(rawTimetine)
+
+          timeline.++(ExtractTimeSeriesJob.extractTimeSeries(rawTimetine))
+
+          activeQuery.from(timeline.last._1 + 1L)
+        }
+
+
+        transferQueue.transfer(timeline.toSeq) // FIXME check if toSeq return a copy
+        timeline.clear()
+      }
+    }
+  }
+
+  //even several workers can be running simultaneously trying to take from queue
+  val predictingWorker = new Runnable {
+    override def run(): Unit = {
+      while (true) {
+        val recentTimeline = transferQueue.take()
+
+        val prediction = AD.predictNextTimeLineIntervalBasedOnRecentState(recentTimeline, activeQuery.getIntervalInMS()) //predict next timeline interval
+        logger.info(s"Predicted timeline: ${prediction.mkString(" -> ")}")
+
+        //TODO publishPredictions
+      }
+
+    }
+  }
+
 
   val predictionMetricPrefix = "prediction"
 
@@ -45,38 +101,40 @@ class TSDBClient(server: String, port: String) extends Thread with LazyLogging {
   var activeQuery: TSDBQuery = _
 
   override def run(): Unit = {
-
     val pw = new PrintWriter(new BufferedOutputStream(agentServerSessionOs))
 
+    activeQuery.from(System.currentTimeMillis())
     try {
-      while (true) {
-        logger.info(s"worker executes: ${activeQuery}")
 
-        val rawTimetine = executeQuery(activeQuery)
-        logger.info(rawTimetine)
-        pw.write(s"got a new timeline: ${rawTimetine}\n")
+      cachingExecutor.submit(tsStreamingWorker)
+      cachingExecutor.submit(predictingWorker)
 
-        var timeline = ExtractTimeSeriesJob.extractTimeSeries(rawTimetine)
-        if (timeline == null || timeline.size == 0) {
-          timeline = Seq[(Long, Double)]((0, 0.0)) //empty timeline initialization
-        }
-
-        /*
-        TODO make asynchronous call -> APPLY Scala RX
-         */
-        val prediction = AD.predictNextTimeLineBasedOnRecentState(timeline, 1)
-        logger.info(s"Predicted timeline: ${prediction.mkString(" -> ")}")
-
-        publishPredictions(prediction, timeline.last._1, activeQuery.getIntervalInMS())
-
-        logger.info(s"await for ${activeQuery.getIntervalInMS()} ms before fetch next timeline")
-        Thread.sleep(activeQuery.getIntervalInMS())
-      }
-    } catch {
+     // cachingExecutor.shutdown()
+      cachingExecutor.awaitTermination(Long.MaxValue, TimeUnit.DAYS) //FIXME: refactor with invokeAll or CountDownLatch
+      cachingExecutor.shutdownNow()
+    }
+    catch {
       case tie: InterruptedException => logger.info("agent worker has been stopped")
       case ioe: IOException => logger.error(ioe.getStackTrace.mkString("\n")) //TODO handle this
       case ste: SocketTimeoutException => logger.error(ste.getStackTrace.mkString("\n")) //TODO handle this
     }
+  }
+
+  def publishPredictions(predictionsToPublish: Seq[(Long, Double)]) = {
+
+
+    cachingExecutor.submit(
+      new Runnable {
+        override def run(): Unit = {
+          val ps = new PrintWriter(openTsdbServerSessionOs.getOutputStream)
+          predictionsToPublish.foreach { case ((ts, m)) =>
+            val putRequest = s"${predictionMetricPrefix}.${activeQuery.getMetric()} ${ts} ${m} [{\"host\":\"pornocluster\"}]"
+            ps.write(s"put ${putRequest}")
+            logger.info(s"Predicted metric has been published: (${ts} : ${m})")
+          }
+        }
+      })
+
 
   }
 
@@ -121,27 +179,6 @@ class TSDBClient(server: String, port: String) extends Thread with LazyLogging {
     val content = Source.fromInputStream(inputStream).mkString
     if (inputStream != null) inputStream.close
     content
-  }
-
-  //TODO make in another thread asynchronously
-  def publishPredictions(predictionsToPublish: Seq[Double],
-                         fromTimeStamp: Long,
-                         timeStepInterval: Long) = {
-
-
-    new Thread(new Runnable {
-      override def run(): Unit = {
-        val ps = new PrintWriter(openTsdbServerSessionOs.getOutputStream)
-        var lastTsPoint: Long = fromTimeStamp
-        predictionsToPublish.foreach { p =>
-          val putRequest = s"${predictionMetricPrefix}.${activeQuery.getMetric()} ${lastTsPoint} ${p} [{\"host\":\"pornocluster\"}]"
-          ps.write(s"put ${putRequest}")
-          logger.info(s"Predicted metric has been published: ${putRequest}")
-          lastTsPoint += timeStepInterval
-        }
-      }
-    }).start()
-
   }
 
   /**

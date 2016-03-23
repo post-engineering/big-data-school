@@ -11,6 +11,7 @@ object ExtractTimeSeriesJob extends SparkJob with LazyLogging {
 
   private[this] val TS_PATTERN = """(.*)\"dps\"\:\{(.+[^\}])\}""".r
   private[this] val DPS_PATTERN = """^\"(\d{1,})\":(\d{1}\.\d*)""".r
+
   /**
     * Executes job specific logic
     * @param sc predefined Spark context
@@ -40,6 +41,7 @@ object ExtractTimeSeriesJob extends SparkJob with LazyLogging {
       .toSeq
   }
 
+
   /**
     * TODO
     * @param tsRaw
@@ -57,6 +59,8 @@ object ExtractTimeSeriesJob extends SparkJob with LazyLogging {
             }
           }
           .filter { case (k, v) => k != 0 && v != 0 }
+          .map { case (k, v) => if (v > 1.0) (k, 0.99) else (k, v) } //upper bound reached
+          // .filter { case (k, v) => v < 1.0 } //FIXME
           .toSeq
       }
       case None => null

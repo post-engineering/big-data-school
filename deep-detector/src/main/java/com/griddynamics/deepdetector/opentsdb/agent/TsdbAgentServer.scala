@@ -22,11 +22,14 @@ object TsdbAgentServer extends LazyLogging {
 
     val os = new BufferedOutputStream(Files.newOutputStream(pathToOutputFile))
 
+    //TODO refactor to dynamic params
+    // TODO load enviromnet and query params from property file at startup or accept agent's config wia telnet after???
+    val interval = 30
     val query = new TSDBQuery()
       .forMetric("proc.loadavg.1min") //proc.meminfo.active //proc.stat.cpu
-      .forInterval(30)
+      .forInterval(interval)
 
-    val worker = new TSDBClient("localhost", "4242")
+    val worker = new TSDBClient("172.26.5.43", "4242")
     //TODO worker.setUncaughtExceptionHandler()
     worker.streamTS(query, os)
 

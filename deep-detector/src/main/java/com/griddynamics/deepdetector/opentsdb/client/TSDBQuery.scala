@@ -6,7 +6,7 @@ package com.griddynamics.deepdetector.opentsdb.client
 class TSDBQuery {
 
   private[this] val REST_ENDPOINT = s"api/query?"
-  private[this] var interval = 0
+  private[this] var interval = 15
   private[this] var start = System.currentTimeMillis() - 60 * 60 * 1000L
   private[this] var end = System.currentTimeMillis()
   private[this] var metric: String = _
@@ -25,6 +25,10 @@ class TSDBQuery {
   def forMetric(m: String) = {
     metric = m
     this
+  }
+
+  def getMetric():String = {
+   metric
   }
 
   def getIntervalInMS(): Long = {

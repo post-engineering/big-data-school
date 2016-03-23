@@ -9,13 +9,13 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.griddynamics.deepdetector</groupId>
+    <groupId>com.griddynamics</groupId>
     <artifactId>deep-detector</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
-       <!-- <hbase.version>1.1.2</hbase.version>-->
+        <hbase.version>1.1.2</hbase.version>
         <dl4j.version>0.4-rc3.8</dl4j.version>
     </properties>
 
@@ -24,6 +24,13 @@
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
+        </dependency>
+
+        <!-- RX -->
+        <dependency>
+            <groupId>io.reactivex</groupId>
+            <artifactId>rxscala_2.10</artifactId>
+            <version>0.25.1</version>
         </dependency>
 
         <!-- scala logging -->
@@ -36,13 +43,14 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.10</artifactId>
+
         </dependency>
-        <dependency>
+     <!--   <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-mllib_2.10</artifactId>
-        </dependency>
+        </dependency>-->
 
-     <!--  &lt;!&ndash; HBase &ndash;&gt;
+       <!-- HBase -->
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-server</artifactId>
@@ -69,7 +77,7 @@
             <groupId>org.hbase</groupId>
             <artifactId>asynchbase</artifactId>
             <version>1.7.0</version>
-        </dependency>-->
+        </dependency>
 
         <dependency>
             <groupId>org.deeplearning4j</groupId>
