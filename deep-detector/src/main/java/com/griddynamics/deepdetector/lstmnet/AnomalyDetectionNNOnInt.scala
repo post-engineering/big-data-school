@@ -2,8 +2,7 @@ package com.griddynamics.deepdetector.lstmnet
 
 import java.io.IOException
 import java.util.Random
-
-import com.griddynamics.deepdetector.etl.ExtractTimeSeriesJob
+import com.griddynamics.deepdetector.etl.jobs.ExtractTimeSeriesJob
 import com.griddynamics.deepdetector.lstmnet.utils.ModelUtils
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
@@ -24,14 +23,12 @@ import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction
 import scala.collection.mutable.ListBuffer
 import scala.reflect.io.File
 
-/**
-  * TODO
-  */
-class AnomalyDetectionNN(sc: SparkContext,
-                         pathToExistingModelConf: Option[String],
-                         pathToExistingModelParam: Option[String],
-                         featureVectorSize: Int = 200,
-                         scaleFactor: Int = 100) extends Serializable with LazyLogging {
+@Deprecated
+class AnomalyDetectionNNOnInt(sc: SparkContext,
+                              pathToExistingModelConf: Option[String],
+                              pathToExistingModelParam: Option[String],
+                              featureVectorSize: Int = 200,
+                              scaleFactor: Int = 100) extends Serializable with LazyLogging {
 
 
   private[this] val LSTM_N_NET = startNN()
@@ -143,7 +140,7 @@ class AnomalyDetectionNN(sc: SparkContext,
     * @param pathToTimeSeriesBatch
     * @return
     */
-  def trainAD(pathToTimeSeriesBatch: String): AnomalyDetectionNN = {
+  def trainAD(pathToTimeSeriesBatch: String): AnomalyDetectionNNOnInt = {
     //val nCores = sc.getConf.get("spark.executor.cores").toInt
     val nCores = 4 //FIXME  fetch actual value from Sparkconf
     val sparkExamplesPerFit: Int = 20 * nCores

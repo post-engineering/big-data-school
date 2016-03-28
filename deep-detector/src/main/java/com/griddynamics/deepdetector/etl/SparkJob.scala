@@ -1,4 +1,4 @@
-package com.griddynamics.deepdetector
+package com.griddynamics.deepdetector.etl
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer

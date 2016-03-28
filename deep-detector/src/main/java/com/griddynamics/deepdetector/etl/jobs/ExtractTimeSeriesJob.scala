@@ -1,6 +1,6 @@
-package com.griddynamics.deepdetector.etl
+package com.griddynamics.deepdetector.etl.jobs
 
-import com.griddynamics.deepdetector.SparkJob
+import com.griddynamics.deepdetector.etl.SparkJob
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
 
@@ -10,7 +10,7 @@ import org.apache.spark.SparkContext
 object ExtractTimeSeriesJob extends SparkJob with LazyLogging {
 
   private[this] val TS_PATTERN = """(.*)\"dps\"\:\{(.+[^\}])\}""".r
-  private[this] val DPS_PATTERN = """^\"(\d{1,})\":(\d{1}\.\d*)""".r
+  private[this] val DPS_PATTERN = """^\"(\d{1,})\":(\d{1,}[\.\d*]*)""".r
 
   /**
     * Executes job specific logic
@@ -47,19 +47,19 @@ object ExtractTimeSeriesJob extends SparkJob with LazyLogging {
     * @param tsRaw
     * @return
     */
-  def extractTimeSeries(tsRaw: String): Seq[(Long, Double)] = {
+  def extractTimeSeries(tsRaw: String): Seq[(Long, Double)] = { //FIXME apply Option
     val ts = TS_PATTERN.findFirstMatchIn(tsRaw) match {
       case Some(v) => {
         v.group(2)
           .split(",")
           .map { dps =>
             DPS_PATTERN.findFirstMatchIn(dps) match {
-              case Some(v) => (v.group(1).toLong, v.group(2).toDouble)
-              case None => (0L, 0.0)
+              case Some(v) => Some((v.group(1).toLong, v.group(2).toDouble))
+              case _ => None
             }
           }
-          .filter { case (k, v) => k != 0 && v != 0 }
-          .map { case (k, v) => if (v > 1.0) (k, 0.99) else (k, v) } //upper bound reached
+         .map{case(ts) => ts.get}
+         // .map { case (k, v) => if (v > 1.0) (k, 0.99) else (k, v) } //FIXME upper bound reached
           // .filter { case (k, v) => v < 1.0 } //FIXME
           .toSeq
       }

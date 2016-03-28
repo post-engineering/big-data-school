@@ -22,6 +22,7 @@ public class ModelUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ModelUtils.class);
 
+
     private ModelUtils() {
     }
 

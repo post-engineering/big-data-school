@@ -1,7 +1,7 @@
-package com.griddynamics.deepdetector.etl
+package com.griddynamics.deepdetector.etl.jobs
 
-import com.griddynamics.deepdetector.SparkJob
-import com.griddynamics.deepdetector.lstmnet.AnomalyDetectionNN
+import com.griddynamics.deepdetector.etl.SparkJob
+import com.griddynamics.deepdetector.lstmnet.AnomalyDetectionNNOnChars
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
 
@@ -16,7 +16,7 @@ object TrainLstmNnOnTimeseriesBatch extends SparkJob with LazyLogging {
     * @return status of job completion: '1' / '0' - success / failure
     */
   override def execute(sc: SparkContext, args: String*): Int = {
-    val ad = new AnomalyDetectionNN(sc, null, null, 200)
+    val ad = new AnomalyDetectionNNOnChars(sc, null, null)
     val batchTsFilePath = args(0)
     val resultModelPath = args(1)
 
