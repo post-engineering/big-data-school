@@ -24,11 +24,13 @@ object ADServer extends LazyLogging {
     val os = new BufferedOutputStream(Files.newOutputStream(pathToOutputFile))
 
     //TODO refactor to dynamic params
-    // TODO load enviromnet and query params from property file at startup or accept agent's config wia telnet after???
-    val interval = 60
+    // TODO load environment and query params from property file at startup or accept agent's config wia telnet after???
+    val interval = 30 * 1000L
+    val timeout = 15 * 1000L
     val query = new TSDBQuery("172.26.5.43", 4242)
       .forMetric("proc.loadavg.1min") //proc.meminfo.active //proc.stat.cpu //proc.meminfo.dirty
       .forInterval(interval)
+      .withTimeout(timeout)
 
     val worker = new ADWorker(query,os)
     //TODO worker.setUncaughtExceptionHandler()

@@ -2,6 +2,7 @@ package com.griddynamics.deepdetector.ad
 
 import java.net.{HttpURLConnection, URL}
 import java.util.concurrent.TransferQueue
+
 import com.griddynamics.deepdetector.etl.jobs.ExtractTimeSeriesJob
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
@@ -26,22 +27,25 @@ private[ad] class TimeSeriesStreamer(streamingQuery: TSDBQuery,
         logger.info(s"worker executes: ${streamingQuery}")
         try {
           executeQuery(streamingQuery) match {
-            case Some(timeline) => {
-              logger.info(s"got new timeline: ${timeline}")
+            case Some(tl) => {
+              logger.info(s"got new timeline: ${tl.mkString(" -> ")}")
 
-              if (timeline != null && timeline.size > 0) {
-                timeline.++(timeline.toList)
-                val nextStart = timeline.last._1 * 1000L + 1L
+              if (tl != null && tl.size > 0) {
+                timeline.++=(tl.toList)
+                val nextStart = tl.last._1 * 1000L + 1L
                 streamingQuery.from(nextStart.toString)
               }
               streamingQuery.to("1s-ago")
 
             }
-            case None => logger.info("query request has been skipped...")
+            case None => {
+              logger.info("query response has been skipped...")
+              waitForTimeout(streamingQuery.getTimeout())
+            }
           }
 
         } catch {
-          case e: Exception => logger.error(e.getStackTrace.mkString("\n"))
+          case e: Exception => logger.error(e.getMessage)
         }
       }
 
@@ -52,6 +56,7 @@ private[ad] class TimeSeriesStreamer(streamingQuery: TSDBQuery,
       if (!transferQueue.tryTransfer(timelineToTransfer)) {
         transferQueue.transfer(timelineToTransfer) //wait untill will be taken by a cinsumer
       } else {
+
         waitForTimeout(streamingQuery.getTimeout()) //wait for timeout
       }
 
@@ -63,7 +68,7 @@ private[ad] class TimeSeriesStreamer(streamingQuery: TSDBQuery,
     if (timeline.size == 0)
       return false
 
-    val acquiredInterval = timeline.last._1 - timeline.head._1
+    val acquiredInterval = (timeline.last._1 - timeline.head._1) * 1000L
     !(acquiredInterval < expectedInterval)
   }
 
@@ -77,7 +82,7 @@ private[ad] class TimeSeriesStreamer(streamingQuery: TSDBQuery,
     var queryResult: Option[Seq[(Long, Double)]] = None
 
     get(query.create()) match {
-      case util.Success(tsdbResponse) => Some(ExtractTimeSeriesJob.extractTimeSeries(tsdbResponse))
+      case util.Success(tsdbResponse) => Option(ExtractTimeSeriesJob.extractTimeSeries(tsdbResponse))
       case util.Failure(error) => {
         logger.error(error.getMessage)
         None
@@ -120,12 +125,17 @@ private[ad] class TimeSeriesStreamer(streamingQuery: TSDBQuery,
     Try(content)
   }
 
+  /* FIXME think of #sleep instead   of wait,
+     cause there is no contention on the this object but wait leads to
+     context switching while acquiring the lock after timeout.
+     On the other hand sleep just holds it.*/
   private[this] def waitForTimeout(timeoutInterval: Long): Unit = {
     if (timeoutInterval > 0L)
       this.synchronized {
         try {
           logger.info(s"wait for ${timeoutInterval} ms ...")
           this.wait(timeoutInterval)
+          logger.info("proceed...")
         } catch {
           case ie: InterruptedException => "timeout waiting has been interrupted"
         }

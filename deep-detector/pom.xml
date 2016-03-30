@@ -33,6 +33,13 @@
             <version>0.25.1</version>
         </dependency>
 
+        <!-- AKKA -->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor_2.10</artifactId>
+            <version>2.3.14</version>
+        </dependency>
+
         <!-- scala logging -->
         <dependency>
             <groupId>com.typesafe.scala-logging</groupId>

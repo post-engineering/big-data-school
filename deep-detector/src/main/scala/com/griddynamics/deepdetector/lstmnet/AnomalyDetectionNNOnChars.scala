@@ -3,6 +3,7 @@ package com.griddynamics.deepdetector.lstmnet
 import java.io.IOException
 import java.lang
 import java.util.Random
+
 import com.griddynamics.deepdetector.etl.jobs.ExtractTimeSeriesJob
 import com.griddynamics.deepdetector.lstmnet.utils.{CharFeaturizer, ModelUtils}
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -32,6 +33,7 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
 
 
   private[this] val LSTM_N_NET = startNN()
+  private[this] var lastTS: Long = 0L //FIXME workaround
 
   def this(sc: SparkContext, modelbasePath: String) =
     this(sc,
@@ -79,13 +81,13 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
     //Set up network configuration:
     val conf: MultiLayerConfiguration = new NeuralNetConfiguration.Builder()
       .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-      .iterations(10)
+      .iterations(1)
       .learningRate(0.1)
       .rmsDecay(0.95)
       .seed(12345)
       .regularization(true)
       .l2(0.001)
-      .list(3)
+      .list(5)
       .layer(0, new GravesLSTM.Builder()
         .nIn(nIn)
         .nOut(lstmLayerSize)
@@ -104,7 +106,25 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
         .dist(new UniformDistribution(-0.08, 0.08))
         .build()
       )
-      .layer(2, new RnnOutputLayer.Builder(LossFunction.MCXENT)
+      .layer(2, new GravesLSTM.Builder()
+        .nIn(lstmLayerSize)
+        .nOut(lstmLayerSize)
+        .updater(Updater.RMSPROP)
+        .activation("tanh")
+        .weightInit(WeightInit.DISTRIBUTION)
+        .dist(new UniformDistribution(-0.08, 0.08))
+        .build()
+      )
+      .layer(3, new GravesLSTM.Builder()
+        .nIn(lstmLayerSize)
+        .nOut(lstmLayerSize)
+        .updater(Updater.RMSPROP)
+        .activation("tanh")
+        .weightInit(WeightInit.DISTRIBUTION)
+        .dist(new UniformDistribution(-0.08, 0.08))
+        .build()
+      )
+      .layer(4, new RnnOutputLayer.Builder(LossFunction.MCXENT)
         .activation("softmax")
         .updater(Updater.RMSPROP)
         .nIn(lstmLayerSize)
@@ -124,6 +144,7 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
     net.init()
     net.setUpdater(null) //Workaround for a minor bug in 0.4-rc3.8
 
+    //  net.setListeners(Collections.singletonList(new ScoreIterationListener().asInstanceOf[IterationListener]))
     net
   }
 
@@ -150,10 +171,8 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
 
 
     //loadTS
-    val rawTs = loadTimeSeriesFromBatchFile(sc, pathToTimeSeriesBatch)
+    val rawTs = loadTimeSeriesFromLocalBatchFile(sc, pathToTimeSeriesBatch)
     val ts = timestempToInterval(rawTs)
-
-
 
     logger.info(s"total number of loaded timelines : ${ts.size}")
 
@@ -162,7 +181,6 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
         .grouped(timelineLength)
         .toSeq
     )
-
 
     rddTs.persist(StorageLevel.MEMORY_ONLY)
 
@@ -180,13 +198,22 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
 
     val featurizer = sc.broadcast(CharFeaturizer)
 
-    for (batch <- timelineBatches) {
+    val numEpochs = 5
 
-      val tsVectorized = batch.map { case (timeline) =>
-        featurizer.value.featurizeTimeline(timeline)
+
+    for (i <- 0 to numEpochs) {
+
+      logger.info(s"epoch #${i}")
+
+      for (batch <- timelineBatches) {
+        val tsVectorized = batch.map { case (timeline) =>
+          featurizer.value.featurizeTimeline(timeline)
+        }
+
+        LSTM_N_NET.fitDataSet(tsVectorized)
       }
 
-      LSTM_N_NET.fitDataSet(tsVectorized)
+      logger.info(s"model score: #${LSTM_N_NET.getScore}")
     }
 
     this
@@ -200,9 +227,9 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
     * @return
     */
   @throws(classOf[IOException])
-  private def loadTimeSeriesFromBatchFile(sc: SparkContext,
-                                          pathToTimeSeriesBatchfile: String
-                                         ): Seq[(Long, Double)] = {
+  private def loadTimeSeriesFromLocalBatchFile(sc: SparkContext,
+                                               pathToTimeSeriesBatchfile: String
+                                              ): Seq[(Long, Double)] = {
 
     // val fileLocation = "/home/ipertushin/Documents/ts_proc.loadavg.1min_all" //FIXME
     //"ts_proc.loadavg.1min.txt"
@@ -350,12 +377,20 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
   def timestempToInterval(timeseries: Seq[(Long, Double)]): Seq[(Long, Double)] = {
     //convert to intervals
     val buf = ListBuffer[(Long, Double)]()
-    buf.+=((0, timeseries(0)._2))
+
+    //FIXME: the ugly workaround for first timeStep interval value
+    if (lastTS == 0L) {
+      buf.+=((0, timeseries(0)._2))
+    } else {
+      buf.+=((timeseries(0)._1 - lastTS, timeseries(0)._2))
+    }
+
     for (i <- 1 to timeseries.size - 1) {
       val interval = timeseries(i)._1 - timeseries(i - 1)._1
       buf.+=((interval, timeseries(i)._2))
     }
 
+    lastTS = timeseries.last._1
     buf.toSeq
   }
 
@@ -404,6 +439,43 @@ class AnomalyDetectionNNOnChars(sc: SparkContext,
   }
 
   def calculateIntervalValue(predictedTimeline: String): Unit = {
+
+  }
+
+  /**
+    * TODO
+    * @param sc
+    * @param pathToTimeSeriesBatchfile
+    * @throws java.io.IOException
+    * @return
+    */
+  @throws(classOf[IOException])
+  private def loadTimeSeriesFromBatchFile(sc: SparkContext,
+                                          pathToTimeSeriesBatchfile: String
+                                         ): Seq[(Long, Double)] = {
+
+
+    val allData = ExtractTimeSeriesJob.loadTSFromFile(sc, pathToTimeSeriesBatchfile)
+    logger.info(s"total number of extracted time steps : ${allData.size}")
+
+    allData
+
+  }
+
+  /**
+    * TODO
+    * @param sc
+    * @param pathToTimeSeriesBatchfile
+    * @throws java.io.IOException
+    * @return
+    */
+  @throws(classOf[IOException])
+  private def loadTimeSeriesRDDFromBatchFile(sc: SparkContext,
+                                             pathToTimeSeriesBatchfile: String
+                                            ): RDD[(Long, Double)] = {
+
+    val allData = ExtractTimeSeriesJob.loadTSRDDFromFile(sc, pathToTimeSeriesBatchfile)
+    allData
 
   }
 

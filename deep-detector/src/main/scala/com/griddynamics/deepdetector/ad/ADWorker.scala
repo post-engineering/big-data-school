@@ -14,14 +14,6 @@ import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer
 class ADWorker(activeQuery: TSDBQuery,
                agentServerSessionOs: OutputStream) extends Thread with LazyLogging {
 
-
-  private val cachingExecutor = Executors.newCachedThreadPool()
-  private val transferQueue = new LinkedTransferQueue[Seq[(Long, Double)]]
-
-  private val tsStreamingWorker = new TimeSeriesStreamer(activeQuery, transferQueue)
-  //even several workers can be running concurently trying to take from queue
-  private val predictingWorker = new TimeSeriesPredictor(sc, activeQuery, transferQueue)
-
   //FIXME move initialization of sc to AD, because conf requires attributes specific to dl4j
   val sc: SparkContext = {
     val conf = new SparkConf().setAppName(this.getClass.getSimpleName)
@@ -30,7 +22,7 @@ class ADWorker(activeQuery: TSDBQuery,
     jarsOpt match {
       case Some(ops) => conf.setJars(List(ops))
       case None => {
-        conf.setMaster("local[4]") //  //spark://172.26.5.43:7077
+        conf.setMaster("local[1]") //  //spark://172.26.5.43:7077
           .set("spark.executor.memory", "1g")
           .set("spark.driver.memory", "1g")
 
@@ -41,6 +33,14 @@ class ADWorker(activeQuery: TSDBQuery,
     conf.set(SparkDl4jMultiLayer.AVERAGE_EACH_ITERATION, String.valueOf(true))
     new SparkContext(conf)
   }
+
+  private val cachingExecutor = Executors.newCachedThreadPool()
+  private val transferQueue = new LinkedTransferQueue[Seq[(Long, Double)]]
+
+  private val tsStreamingWorker = new TimeSeriesStreamer(activeQuery, transferQueue)
+  //even several workers can be running concurrently trying to take from queue
+  private val predictingWorker = new TimeSeriesPredictor(sc, activeQuery, transferQueue)
+
 
   override def run(): Unit = {
     val pw = new PrintWriter(new BufferedOutputStream(agentServerSessionOs))

@@ -59,15 +59,16 @@ class TSDBQuery(server: String, port: Int) {
     this
   }
 
+  @Deprecated
   def create(server: String, port: String): String = {
     s"http://${server}:${port}/${create()}"
   }
 
   def create(): String = {
-    // refresh
-    s"${REST_ENDPOINT}start=${start}&end=${end}&m=${aggregationFunc}:${metric}" //%7Bhost=ipetrushin%7D
+    s"http://${server}:${port}/${REST_ENDPOINT}start=${start}&end=${end}&m=${aggregationFunc}:${metric}" //%7Bhost=ipetrushin%7D
   }
 
+  @Deprecated
   def refresh(): Unit = {
     start = (System.currentTimeMillis() - getInterval()).toString
     end = System.currentTimeMillis().toString
