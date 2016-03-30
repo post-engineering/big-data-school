@@ -3,6 +3,7 @@ package com.griddynamics.deepdetector.etl.jobs
 import com.griddynamics.deepdetector.etl.SparkJob
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
 
 /**
   * TODO
@@ -20,7 +21,7 @@ object ExtractTimeSeriesJob extends SparkJob with LazyLogging {
     */
   override def execute(sc: SparkContext, args: String*): Int = {
     val filePath = args(0)
-    loadTSFromFile(sc, filePath)
+    loadTSRDDFromFile(sc, filePath)
       .foreach(ts => logger.info(ts.toString()))
     1
   }
@@ -32,13 +33,24 @@ object ExtractTimeSeriesJob extends SparkJob with LazyLogging {
     * @return
     */
   def loadTSFromFile(sc: SparkContext, filePath: String): Seq[(Long, Double)] = {
+    loadTSRDDFromFile(sc,filePath)
+      .collect()
+      .toSeq
+  }
+
+
+  /**
+    * TODO
+    * @param sc
+    * @param filePath
+    * @return
+    */
+  def loadTSRDDFromFile(sc: SparkContext, filePath: String): RDD[(Long, Double)] = {
     sc.textFile(filePath)
       .map { s => extractTimeSeries(s) }
       .filter(s => s != null)
       .flatMap(identity)
       .sortByKey(true)
-      .collect()
-      .toSeq
   }
 
 
@@ -59,8 +71,6 @@ object ExtractTimeSeriesJob extends SparkJob with LazyLogging {
             }
           }
          .map{case(ts) => ts.get}
-         // .map { case (k, v) => if (v > 1.0) (k, 0.99) else (k, v) } //FIXME upper bound reached
-          // .filter { case (k, v) => v < 1.0 } //FIXME
           .toSeq
       }
       case None => null

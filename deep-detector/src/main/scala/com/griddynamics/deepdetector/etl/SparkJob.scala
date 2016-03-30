@@ -22,12 +22,13 @@ abstract class SparkJob {
       jarsOpt match {
         case Some(ops) => conf.setJars(List(ops))
         case None => {
-          conf.setMaster("local[3]")//  //spark://172.26.5.43:7077
+          conf.setMaster("local[5]")//  //spark://172.26.5.43:7077
             .set("spark.executor.memory", "1g")
-            .set("spark.driver.memory", "1g")
+            .set("spark.driver.memory", "3g")
             .set(SparkDl4jMultiLayer.AVERAGE_EACH_ITERATION, String.valueOf(true))
+            //.setJars(List("/home/ipertushin/IdeaProjects/big-data-school/deep-detector/target/deep-detector-1.0-SNAPSHOT.jar"))
 
-            // conf.setJars(List("/home/ipertushin/IdeaProjects/big-data-school/spark-in-dark/target/big-deep-holms-1.0-SNAPSHOT.jar"))
+
 
         }
 
